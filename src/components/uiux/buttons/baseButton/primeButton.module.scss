@@ -1,0 +1,11 @@
+button.button {
+  padding: 19px 50px;
+  color: #fff;
+  font-family: sfuiDisplayMedium, serif;
+  border: none;
+  max-width: fit-content;
+  &:hover {
+    background-color: var(--green-color-hover-prime) !important;
+    transition: 300ms;
+  }
+}

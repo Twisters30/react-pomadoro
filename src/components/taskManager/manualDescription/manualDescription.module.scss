@@ -1,0 +1,16 @@
+.manual-description {
+  &__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    line-height: 33px;
+  }
+  &__item {
+    padding-left: 1em;
+    text-indent: -.7em;
+    &::before {
+      content: "• ";
+      color: var(--red-color-prime);
+    }
+  }
+}
