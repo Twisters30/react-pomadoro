@@ -11,6 +11,10 @@
     src: local('sfuiDisplayBold'), url('assets/fonts/SFUIDisplay/sf-ui-display-bold-58646a511e3d9.otf') format('truetype');
 }
 
+ol,ul {
+    padding: 0 !important;
+    margin: 0;
+}
 :root {
     font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
     line-height: 1.5;
@@ -79,4 +83,9 @@ h2 {
 }
 .mb-25p {
     margin-bottom: 25px;
+}
+button:disabled,
+button[disabled] {
+    opacity: .5;
+    pointer-events: none;
 }

@@ -1,21 +1,14 @@
 import styles from "./taskInput.module.scss";
-import { FC, FormEvent, useState } from "react";
+import { FC, FormEvent } from "react";
 
 type TProp = {
-	handleInput: (value) => void;
+	handleInput: (event: FormEvent<HTMLInputElement>) => void;
 	className?: string;
+	inputValue: string;
 }
 
-export const TaskInput: FC<TProp> = ({ handleInput, className= "" }) => {
-	const [value, setValue] = useState('');
-	const handleInputValue = (event: FormEvent<HTMLInputElement>) => {
-		const value = event.currentTarget.value;
-		if (value) {
-			setValue(value);
-			handleInput(value);
-		}
-	}
+export const TaskInput: FC<TProp> = ({ inputValue, className= "", handleInput }) => {
 	return (
-		<input onInput={handleInputValue} value={value} className={`${styles['task-input']} ${className}`} />
+		<input onChange={handleInput} value={inputValue} className={`${styles['task-input']} ${className}`} />
 	)
 }
