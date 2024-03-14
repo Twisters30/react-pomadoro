@@ -4,46 +4,68 @@ import controlPlus from "@/assets/icons/control_plus.svg";
 import deleteIcon from "@/assets/icons/delete.svg";
 import editIcon from "@/assets/icons/edit.svg";
 
-import { FC } from "react";
+import { FC, RefObject } from "react";
+import type { Task } from "@/store/taskReducer";
 type TProp = {
 	openDropdown: boolean;
-	refDropdown: any
+	refDropdown: RefObject<HTMLUListElement> | null;
+	removeTask: (id: Task["id"]) => void;
+	task: Task;
+	incrementPomodoro: (id: Task["id"]) => void;
+	decrementPomodoro: (id: Task["id"]) => void;
+	editTitleTaskActive: (id: Task["id"], ref: RefObject<HTMLInputElement>) => void;
+	refInputView: RefObject<HTMLInputElement> | null;
 }
 type TDropdown = {
 	options: {
 		value: string;
 		icon: string;
+		onClick?: (task: Task["id"], refInputView: TProp["refInputView"]) => void;
 	}[];
 };
 
-const dropdown: TDropdown = {
-	options: [
-		{
-			value: "Увеличить",
-			icon: controlPlus,
-		},
-		{
-			value: "Уменьшить",
-			icon: controlMinus,
-		},
-		{
-			value: "Редактировать",
-			icon: editIcon,
-		},
-		{
-			value: "Удалить",
-			icon: deleteIcon,
-		},
-	],
-};
-
-export const SettingsTodoDropdown: FC<TProp> = ({ openDropdown, refDropdown }) => {
+export const SettingsTodoDropdown: FC<TProp> = (
+	{
+		openDropdown,
+		refDropdown,
+		removeTask,
+		task,
+		incrementPomodoro,
+		decrementPomodoro,
+		editTitleTaskActive,
+		refInputView
+	}) => {
+	const dropdown: TDropdown = {
+		options: [
+			{
+				value: "Увеличить",
+				icon: controlPlus,
+				onClick: incrementPomodoro
+			},
+			{
+				value: "Уменьшить",
+				icon: controlMinus,
+				onClick: decrementPomodoro
+			},
+			{
+				value: "Редактировать",
+				icon: editIcon,
+				onClick: editTitleTaskActive
+			},
+			{
+				value: "Удалить",
+				icon: deleteIcon,
+				onClick: removeTask
+			},
+		],
+	};
 	return (
-		openDropdown && <ul ref={refDropdown} className={styles.dropdown}>
+		openDropdown && <ul ref={refDropdown!} className={styles.dropdown}>
 			{
 				dropdown.options.map((item) => (
 					<li key={item.value}>
 						<button
+							onClick={() => item.onClick ? item.onClick(task.id, refInputView) : null}
 							style={{backgroundImage: `url(${item.icon})`}}
 							className={`${styles.button}`}
 						>

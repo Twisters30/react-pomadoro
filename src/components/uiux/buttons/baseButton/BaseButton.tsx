@@ -17,7 +17,6 @@ export const BaseButton: FC<TProp> = (
 		onClick,
 		isDisable = false}
 ) => {
-	console.log(isDisable)
 	return (
 		<button
 			disabled={!!isDisable}

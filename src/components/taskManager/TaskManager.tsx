@@ -4,24 +4,42 @@ import { TaskInput } from "@/components/uiux/inputs/taskInput/TaskInput";
 import { BaseButton } from "@/components/uiux/buttons/baseButton/BaseButton";
 import { TaskViewInput } from "@/components/uiux/inputs/taskViewInput/TaskViewInput";
 import { Task } from "@/store/taskReducer";
-import {FC, FormEvent, useState} from "react";
+import {Dispatch, FC, FormEvent, useState} from "react";
 import { v4 as uuidv4 } from "uuid";
 
 type TProps = {
 	tasks: Task[];
 	createTask: (task: Task) => void;
+	removeTask: (id: Task["id"]) => void;
+	incrementPomodoro: (id: Task["id"]) => void;
+	decrementPomodoro: (id: Task["id"]) => void;
+	editTitleTask: (payload:{id:Task["id"], title: Task["title"]}) => void;
 }
 
-export const TaskManager: FC<TProps> = ({tasks= [], createTask }) => {
+export const TaskManager: FC<TProps> = (
+	{
+		tasks= [],
+		createTask,
+		removeTask,
+		incrementPomodoro,
+		decrementPomodoro,
+		editTitleTask
+	}) => {
 	const [taskInputValue, setTaskInputValue] = useState("");
+	const [taskIdEditing, setTaskIdEditing] = useState<Task["id"] | null>(null);
 	const handleInputValue = (event: FormEvent<HTMLInputElement>) => {
 		const value = event.currentTarget.value;
 		setTaskInputValue(value);
 	}
 	const isDisableBtn = taskInputValue === "";
 
-	const handleInputView = (value) => {
-		console.log(value);
+	const handleInputView = (title: Task["title"], setInputView: Dispatch<Task["title"]>) => {
+		if (taskIdEditing) {
+			editTitleTask({id: taskIdEditing, title});
+			setInputView(title);
+			console.log(setInputView)
+			return;
+		}
 	}
 	const clickButtonCreateTask = () => {
 		if (taskInputValue) {
@@ -29,6 +47,10 @@ export const TaskManager: FC<TProps> = ({tasks= [], createTask }) => {
 			createTask(task);
 			setTaskInputValue("");
 		}
+	}
+	const editTitleTaskActive = (id: Task["id"], refInput) => {
+		refInput.current.focus();
+		setTaskIdEditing(id);
 	}
 	return(
 		<div className={"d-flex flex-column"}>
@@ -47,9 +69,11 @@ export const TaskManager: FC<TProps> = ({tasks= [], createTask }) => {
 							<TaskViewInput
 								key={task.id}
 								task={task}
-								taskNumber={task.pomodoroCount}
 								handleInput={handleInputView}
-								inputValue={task.title}
+								removeTask={removeTask}
+								incrementPomodoro={incrementPomodoro}
+								decrementPomodoro={decrementPomodoro}
+								editTitleTaskActive={editTitleTaskActive}
 							/>
 						)
 					)
