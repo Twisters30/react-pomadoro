@@ -11,7 +11,7 @@ export const Header = () => {
 						<img className="p-2" src={logo} alt="логотип"/>
 						<div className="logo-name">pomodoro_box</div>
 					</div>
-					<div className="col-2">
+					<div className="col-10">
 						<MainNavigation />
 					</div>
 				</div>

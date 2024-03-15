@@ -16,7 +16,7 @@ const links: Array<TLink> = [
 export const MainNavigation = () => {
 	const activeLink = useLocation().pathname;
 	return (
-		<nav className="d-flex">
+		<nav className="d-flex justify-content-end">
 			{
 				links.map((link) => (
 					<div className="icon" style={{backgroundImage: `url(${link.icon || ""})`}} key={link.pathname}>

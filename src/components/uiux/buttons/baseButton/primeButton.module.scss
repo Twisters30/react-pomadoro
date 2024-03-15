@@ -2,10 +2,12 @@ button.button {
   padding: 19px 50px;
   color: #fff;
   font-family: sfuiDisplayMedium, serif;
-  border: none;
+  border: 2px solid #C4C4C4;
   max-width: fit-content;
+  font-weight: 500;
+  line-height: 17px;
   &:hover {
-    background-color: var(--green-color-hover-prime) !important;
+    opacity: .5 !important;
     transition: 300ms;
   }
 }

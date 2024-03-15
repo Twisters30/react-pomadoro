@@ -2,6 +2,7 @@ import { TaskManager } from "@/components/taskManager/TaskManager";
 import { useDispatch, useSelector } from "react-redux";
 import { createTaskAction, removeTaskAction, Task, incrementTaskAction, decrementTaskAction, editTitleTaskAction } from "@/store/taskReducer";
 import { confirmModal } from "@/components/modals/confirmModal/ConfirmModal";
+import { TimerInterface } from "@/components/timerInterface/TimerInterface";
 
 export const MainPage = () => {
 	const dispatch = useDispatch();
@@ -23,7 +24,7 @@ export const MainPage = () => {
 	}
 
 	return (
-		<>
+		<div className={"row"}>
 			<TaskManager
 				tasks={tasks}
 				createTask={createTask}
@@ -32,6 +33,7 @@ export const MainPage = () => {
 				decrementPomodoro={decrementPomodoro}
 				editTitleTask={editTitleTask}
 			/>
-		</>
+			<TimerInterface tasks={tasks} />
+		</div>
 	)
 }

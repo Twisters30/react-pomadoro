@@ -1,5 +1,5 @@
 import styles from "./taskViewInput.module.scss";
-import {FC, FormEvent, ReactElement, useState, useRef, RefObject} from "react";
+import { FC, FormEvent, ReactElement, useState, useRef } from "react";
 import { SettingsTodoDropdown } from "@/components/uiux/baseDropdown/SettingsTodoDropdown";
 import { useOnClickOutside } from "usehooks-ts";
 import { Task } from "@/store/taskReducer";
@@ -31,7 +31,8 @@ export const TaskViewInput: FC<TProp> = (
 	const closeDropdown = () => {
 		setDropdownActive( () => false);
 	}
-	useOnClickOutside(refDropdown, closeDropdown)
+	editTitleTaskActive.bind(closeDropdown);
+	useOnClickOutside(refDropdown, closeDropdown);
 	const [value, setValue] = useState<Task["title"]>(task.title);
 	const handleInputValue = (event: FormEvent<HTMLInputElement>) => {
 		const value = event.currentTarget.value;
@@ -51,7 +52,7 @@ export const TaskViewInput: FC<TProp> = (
 				removeTask={removeTask}
 				incrementPomodoro={incrementPomodoro}
 				decrementPomodoro={decrementPomodoro}
-				editTitleTaskActive={editTitleTaskActive}
+				editTitleTaskActive={editTitleTaskActive.bind(closeDropdown)}
 			/>
 		</li>
 	)

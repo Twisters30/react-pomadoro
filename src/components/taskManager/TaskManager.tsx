@@ -27,7 +27,7 @@ export const TaskManager: FC<TProps> = (
 	}) => {
 	const [taskInputValue, setTaskInputValue] = useState("");
 	const [taskIdEditing, setTaskIdEditing] = useState<Task["id"] | null>(null);
-	const handleInputValue = (event: FormEvent<HTMLInputElement>) => {
+	const handleTaskInputValue = (event: FormEvent<HTMLInputElement>) => {
 		const value = event.currentTarget.value;
 		setTaskInputValue(value);
 	}
@@ -37,25 +37,34 @@ export const TaskManager: FC<TProps> = (
 		if (taskIdEditing) {
 			editTitleTask({id: taskIdEditing, title});
 			setInputView(title);
-			console.log(setInputView)
 			return;
 		}
 	}
 	const clickButtonCreateTask = () => {
 		if (taskInputValue) {
-			const task: Task = { title: taskInputValue, id: uuidv4(), pomodoroCount: 4 };
+			const time = new Date();
+			time.setSeconds(time.getSeconds() + 1500);
+			const task: Task = {
+				title:
+				taskInputValue,
+				id: uuidv4(),
+				pomodoroCount: 4,
+				timer: time,
+				timerOnPause:0,
+				done: false };
 			createTask(task);
 			setTaskInputValue("");
 		}
 	}
-	const editTitleTaskActive = (id: Task["id"], refInput) => {
+	const editTitleTaskActive = function (id: Task["id"], refInput) {
 		refInput.current.focus();
+		if (typeof this === "function") this();
 		setTaskIdEditing(id);
 	}
 	return(
-		<div className={"d-flex flex-column"}>
+		<div className={"d-flex flex-column col-5"}>
 			<ManualDescription className="mb-25p" />
-			<TaskInput className="mb-25p" handleInput={handleInputValue} inputValue={taskInputValue} />
+			<TaskInput className="mb-25p" handleInput={handleTaskInputValue} inputValue={taskInputValue} />
 			<BaseButton
 				isDisable={isDisableBtn}
 				onClick={clickButtonCreateTask}

@@ -1,0 +1,55 @@
+.timer-interface {
+  &__wrapper {
+    background: #F4F4F4;
+    padding: 0 !important;
+  }
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    padding: 19px 40px;
+    margin-bottom: 70px;
+    color: #fff;
+    background-color: #C4C4C4;
+  }
+  &__menu-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #F4F4F4;
+  }
+  &__title-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+  &__time-wrapper {
+    display: flex;
+    align-items: center;
+  }
+  &__time {
+    color: #333333;
+    font-size: 150px;
+    line-height: 179px;
+    font-family: sfuiDisplayUltraLight, sans-serif;
+    margin-right: 25px;
+  }
+  &__btn-add-time {}
+  &__task-count {
+    color: #999999;
+  }
+  &__task-name {
+    color: #333333;
+  }
+  &__buttons-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    margin-bottom: 107px;
+  }
+  &__btn-play {
+    color: #C4C4C4;
+  }
+  &__btn-cancel {
+    color: #C4C4C4;
+  }
+}

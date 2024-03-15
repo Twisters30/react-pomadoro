@@ -1,5 +1,5 @@
 import styles from "./primeButton.module.scss";
-import {FC, useState} from "react";
+import { FC } from "react";
 
 type TProp = {
 	children: string;

@@ -1,9 +1,11 @@
-import {Simulate} from "react-dom/test-utils";
 
 export type Task = {
+	timer: Date,
+	timerOnPause: number,
 	id: string;
 	title: string;
 	pomodoroCount: number;
+	done: boolean;
 	statistics?:{
 		weeks:[]
 	}
@@ -11,12 +13,16 @@ export type Task = {
 type DefaultState = {
 	tasks: Task[];
 }
-
+const time = new Date();
+time.setSeconds(time.getSeconds() + 1500); // 10 minutes timer
 const defaultState: DefaultState = {
 	tasks: [{
+		timer: time,
+		timerOnPause: 0,
 		id: "1",
 		title: "TEST",
-		pomodoroCount: 4
+		pomodoroCount: 4,
+		done: false
 	}]
 }
 interface ITaskReducer {
@@ -36,7 +42,6 @@ export const taskReducer = (state = defaultState, action: ITaskReducer['action']
 	switch (action.type) {
 		case EDIT_TASK_TASK:
 			return  {...state, tasks: [...state.tasks.map((task) => {
-					console.log(action)
 				if ("id" in action.payload && task.id === action.payload.id) {
 					task.title = action.payload.title;
 				}
