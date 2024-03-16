@@ -1,5 +1,6 @@
 
 export type Task = {
+	isStart: boolean,
 	timer: Date,
 	timerOnPause: number,
 	id: string;
@@ -13,14 +14,25 @@ export type Task = {
 type DefaultState = {
 	tasks: Task[];
 }
-const time = new Date();
-time.setSeconds(time.getSeconds() + 1500); // 10 minutes timer
+type TConfig = {
+	time: Date;
+	getTimeWork: (number) => void;
+}
+export const configPomodoro: TConfig = {
+	time: new Date(),
+	getTimeWork: function (timeWork) {
+		const time = new Date();
+		this.time = time.setSeconds(time.getSeconds() + timeWork);
+	}
+}
+configPomodoro.getTimeWork(1500);
 const defaultState: DefaultState = {
 	tasks: [{
-		timer: time,
+		isStart: false,
+		timer: configPomodoro.time,
 		timerOnPause: 0,
 		id: "1",
-		title: "TEST",
+		title: "Сделать pomodoro трекер",
 		pomodoroCount: 4,
 		done: false
 	}]
@@ -28,7 +40,14 @@ const defaultState: DefaultState = {
 interface ITaskReducer {
 	state: Task[],
 	action: {
-		type: "CREATE_TASK" | "REMOVE_TASK" | "INCREMENT_POMODORO_TASK" | "DECREMENT_POMODORO_TASK" | "EDIT_TASK_TASK";
+		type: "CREATE_TASK"
+			| "REMOVE_TASK"
+			| "INCREMENT_POMODORO_TASK"
+			| "DECREMENT_POMODORO_TASK"
+			| "EDIT_TASK_TASK"
+			| "SET_TASK_START"
+			| "SET_TASK_COMPLETE"
+		;
 		payload: {id: Task["id"] , title: Task["title"]} | Task["id"] ;
 	}
 }
@@ -37,9 +56,25 @@ const REMOVE_TASK = "REMOVE_TASK";
 const INCREMENT_POMODORO_TASK = "INCREMENT_POMODORO_TASK";
 const DECREMENT_POMODORO_TASK = "DECREMENT_POMODORO_TASK";
 const EDIT_TASK_TASK = "EDIT_TASK_TASK";
+const SET_TASK_START = "SET_TASK_START";
+const SET_TASK_COMPLETE = "SET_TASK_COMPLETE";
 
 export const taskReducer = (state = defaultState, action: ITaskReducer['action']) => {
 	switch (action.type) {
+		case SET_TASK_COMPLETE :
+			return {...state, tasks: [...state.tasks.map((task) => {
+				if (task.id === action.payload) {
+					task.done = true;
+				}
+				return task;
+				})]}
+		case SET_TASK_START :
+			return {...state, tasks: [...state.tasks.map((task) => {
+				if (task.id === action.payload) {
+					task.isStart = true;
+				}
+				return task;
+				})]}
 		case EDIT_TASK_TASK:
 			return  {...state, tasks: [...state.tasks.map((task) => {
 				if ("id" in action.payload && task.id === action.payload.id) {
@@ -71,3 +106,5 @@ export const removeTaskAction = (payload: Task["id"]) => ({type: REMOVE_TASK, pa
 export const incrementTaskAction = (payload: Task["id"]) => ({type: INCREMENT_POMODORO_TASK, payload});
 export const decrementTaskAction = (payload: Task["id"]) => ({type: DECREMENT_POMODORO_TASK, payload});
 export const editTitleTaskAction = (payload:{id:Task["id"],title: Task["title"]}) => ({type: EDIT_TASK_TASK, payload});
+export const setTaskStartAction = (payload: Task["id"]) => ({type: SET_TASK_START, payload});
+export const setTaskCompleteAction = (payload: Task["id"]) => ({type: SET_TASK_COMPLETE, payload});

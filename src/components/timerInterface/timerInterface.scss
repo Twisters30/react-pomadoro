@@ -32,6 +32,12 @@
     line-height: 179px;
     font-family: sfuiDisplayUltraLight, sans-serif;
     margin-right: 25px;
+    &.play {
+      color: var(--play-color);
+    }
+    &.pause {
+      color: var(--pause-color);
+    }
   }
   &__btn-add-time {}
   &__task-count {
@@ -51,5 +57,13 @@
   }
   &__btn-cancel {
     color: #C4C4C4;
+    background: transparent;
+    &.play {
+      color: var(--pause-color);
+      border-color: var(--pause-color) ;
+      &:hover {
+        color: #fff;
+      }
+    }
   }
 }

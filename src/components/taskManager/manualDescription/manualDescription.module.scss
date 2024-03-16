@@ -10,7 +10,7 @@
     text-indent: -.7em;
     &::before {
       content: "• ";
-      color: var(--red-color-prime);
+      color: var(--pause-color);
     }
   }
 }

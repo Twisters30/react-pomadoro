@@ -3,8 +3,8 @@ import { ManualDescription } from "@/components/taskManager/manualDescription/ma
 import { TaskInput } from "@/components/uiux/inputs/taskInput/TaskInput";
 import { BaseButton } from "@/components/uiux/buttons/baseButton/BaseButton";
 import { TaskViewInput } from "@/components/uiux/inputs/taskViewInput/TaskViewInput";
-import { Task } from "@/store/taskReducer";
-import {Dispatch, FC, FormEvent, useState} from "react";
+import { configPomodoro, Task } from "@/store/taskReducer";
+import { Dispatch, FC, FormEvent, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 type TProps = {
@@ -45,13 +45,14 @@ export const TaskManager: FC<TProps> = (
 			const time = new Date();
 			time.setSeconds(time.getSeconds() + 1500);
 			const task: Task = {
-				title:
-				taskInputValue,
+				isStart: false,
+				title: taskInputValue,
 				id: uuidv4(),
 				pomodoroCount: 4,
-				timer: time,
-				timerOnPause:0,
-				done: false };
+				timer: configPomodoro.time,
+				timerOnPause: 0,
+				done: false
+			};
 			createTask(task);
 			setTaskInputValue("");
 		}
@@ -68,7 +69,7 @@ export const TaskManager: FC<TProps> = (
 			<BaseButton
 				isDisable={isDisableBtn}
 				onClick={clickButtonCreateTask}
-				className="mb-25p"
+				className="mb-25p prime-play-btn"
 			>
 				Добавить
 			</BaseButton>

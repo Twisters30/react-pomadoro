@@ -1,6 +1,15 @@
 import { TaskManager } from "@/components/taskManager/TaskManager";
 import { useDispatch, useSelector } from "react-redux";
-import { createTaskAction, removeTaskAction, Task, incrementTaskAction, decrementTaskAction, editTitleTaskAction } from "@/store/taskReducer";
+import {
+	Task,
+	createTaskAction,
+	removeTaskAction,
+	incrementTaskAction,
+	decrementTaskAction,
+	editTitleTaskAction,
+	setTaskStartAction,
+	setTaskCompleteAction,
+} from "@/store/taskReducer";
 import { confirmModal } from "@/components/modals/confirmModal/ConfirmModal";
 import { TimerInterface } from "@/components/timerInterface/TimerInterface";
 
@@ -22,18 +31,26 @@ export const MainPage = () => {
 	const editTitleTask = (payload: {id: Task["id"], title: Task["title"]}) => {
 		dispatch(editTitleTaskAction(payload));
 	}
+	const setTaskStart = (payload: Task["id"]) => {
+		dispatch(setTaskStartAction(payload))
+	}
+	const setTaskComplete = (payload: Task["id"]) => {
+		dispatch(setTaskCompleteAction(payload))
+	}
+	const unCompleteTasks = tasks.filter((task) => !task.done)
+	const currentTask: Task = unCompleteTasks.find((task) => task != task.done);
 
 	return (
 		<div className={"row"}>
 			<TaskManager
-				tasks={tasks}
+				tasks={unCompleteTasks}
 				createTask={createTask}
 				removeTask={removeTask}
 				incrementPomodoro={incrementPomodoro}
 				decrementPomodoro={decrementPomodoro}
 				editTitleTask={editTitleTask}
 			/>
-			<TimerInterface tasks={tasks} />
+			<TimerInterface task={currentTask} setTaskStart={setTaskStart} setTaskComplete={setTaskComplete}/>
 		</div>
 	)
 }
