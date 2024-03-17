@@ -1,5 +1,6 @@
 import { TaskManager } from "@/components/taskManager/TaskManager";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, shallowEqual } from "react-redux";
+import { v4 as uuidv4 } from "uuid";
 import {
 	Task,
 	createTaskAction,
@@ -15,7 +16,8 @@ import { TimerInterface } from "@/components/timerInterface/TimerInterface";
 
 export const MainPage = () => {
 	const dispatch = useDispatch();
-	const tasks = useSelector((state) => state.tasks);
+
+	const [timerConfig,tasks] = useSelector((state) => [state.timerConfig, state.tasks], shallowEqual);
 	const createTask = (payload: Task) => {
 		dispatch(createTaskAction(payload));
 	}
@@ -49,8 +51,15 @@ export const MainPage = () => {
 				incrementPomodoro={incrementPomodoro}
 				decrementPomodoro={decrementPomodoro}
 				editTitleTask={editTitleTask}
+				timerConfig={timerConfig}
 			/>
-			<TimerInterface task={currentTask} setTaskStart={setTaskStart} setTaskComplete={setTaskComplete}/>
+			<TimerInterface
+				key={currentTask?.id || uuidv4()}
+				task={currentTask}
+				setTaskStart={setTaskStart}
+				setTaskComplete={setTaskComplete}
+				timerConfig={timerConfig}
+			/>
 		</div>
 	)
 }

@@ -1,7 +1,7 @@
 
 export type Task = {
 	isStart: boolean,
-	timer: Date,
+	timer: number,
 	timerOnPause: number,
 	id: string;
 	title: string;
@@ -11,25 +11,27 @@ export type Task = {
 		weeks:[]
 	}
 }
+export type TConfigPomodoro = {
+	ms: number;
+	getTimeWork: (number?: number) => number;
+}
 type DefaultState = {
+	timerConfig: TConfigPomodoro
 	tasks: Task[];
 }
-type TConfig = {
-	time: Date;
-	getTimeWork: (number) => void;
-}
-export const configPomodoro: TConfig = {
-	time: new Date(),
-	getTimeWork: function (timeWork) {
+
+const timerConfig: TConfigPomodoro = {
+	ms: 1500,
+	getTimeWork: function (timeWork = this.ms) {
 		const time = new Date();
-		this.time = time.setSeconds(time.getSeconds() + timeWork);
+		return time.setSeconds(time.getSeconds() + timeWork);
 	}
 }
-configPomodoro.getTimeWork(1500);
 const defaultState: DefaultState = {
+	timerConfig,
 	tasks: [{
 		isStart: false,
-		timer: configPomodoro.time,
+		timer: timerConfig.getTimeWork(),
 		timerOnPause: 0,
 		id: "1",
 		title: "Сделать pomodoro трекер",

@@ -3,7 +3,7 @@ import { ManualDescription } from "@/components/taskManager/manualDescription/ma
 import { TaskInput } from "@/components/uiux/inputs/taskInput/TaskInput";
 import { BaseButton } from "@/components/uiux/buttons/baseButton/BaseButton";
 import { TaskViewInput } from "@/components/uiux/inputs/taskViewInput/TaskViewInput";
-import { configPomodoro, Task } from "@/store/taskReducer";
+import {Task, TConfigPomodoro} from "@/store/taskReducer";
 import { Dispatch, FC, FormEvent, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
@@ -14,6 +14,7 @@ type TProps = {
 	incrementPomodoro: (id: Task["id"]) => void;
 	decrementPomodoro: (id: Task["id"]) => void;
 	editTitleTask: (payload:{id:Task["id"], title: Task["title"]}) => void;
+	timerConfig: TConfigPomodoro
 }
 
 export const TaskManager: FC<TProps> = (
@@ -23,7 +24,8 @@ export const TaskManager: FC<TProps> = (
 		removeTask,
 		incrementPomodoro,
 		decrementPomodoro,
-		editTitleTask
+		editTitleTask,
+		timerConfig
 	}) => {
 	const [taskInputValue, setTaskInputValue] = useState("");
 	const [taskIdEditing, setTaskIdEditing] = useState<Task["id"] | null>(null);
@@ -42,14 +44,12 @@ export const TaskManager: FC<TProps> = (
 	}
 	const clickButtonCreateTask = () => {
 		if (taskInputValue) {
-			const time = new Date();
-			time.setSeconds(time.getSeconds() + 1500);
 			const task: Task = {
 				isStart: false,
 				title: taskInputValue,
 				id: uuidv4(),
 				pomodoroCount: 4,
-				timer: configPomodoro.time,
+				timer: timerConfig.getTimeWork(),
 				timerOnPause: 0,
 				done: false
 			};

@@ -3,18 +3,25 @@ import { CircleButton } from "@/components/uiux/buttons/circleButton/CircleButto
 import { BaseButton } from "@/components/uiux/buttons/baseButton/BaseButton";
 import { useTimer } from 'react-timer-hook';
 import { FC } from "react";
-import { Task } from "@/store/taskReducer";
+import { Task, TConfigPomodoro } from "@/store/taskReducer";
+
 type TProps = {
 	task: Task
 	setTaskStart: (id: Task["id"]) => void;
 	setTaskComplete: (id: Task["id"]) => void;
+	timerConfig: TConfigPomodoro;
 }
 
-export const TimerInterface: FC<TProps> = ({ task, setTaskStart, setTaskComplete }) => {
-
+export const TimerInterface: FC<TProps> = (
+	{
+		task,
+		setTaskStart,
+		setTaskComplete,
+		timerConfig
+	}) => {
 	const { seconds, minutes, hours, start, resume, isRunning, pause, restart } = useTimer(
 		{
-			expiryTimestamp: task ? task.timer : new Date(),
+			expiryTimestamp: timerConfig.getTimeWork(),
 			autoStart: false,
 			onExpire: () => console.warn('onExpire called')
 		});
@@ -22,18 +29,28 @@ export const TimerInterface: FC<TProps> = ({ task, setTaskStart, setTaskComplete
 		console.log("click add time")
 	}
 	const startTaskTimer = () => {
-		start();
-		setTaskStart(task.id);
+		if ("id" in task) {
+			start();
+			setTaskStart(task.id);
+		}
 	}
 	const pauseTimer = () => {
-		pause();
+		if ("id" in task) {
+			pause();
+		}
 	}
 	const clickTaskComplete = () => {
-		setTaskComplete(task.id);
-		restart();
+		if ("id" in task) {
+			timerConfig.getTimeWork();
+			setTaskComplete(task.id);
+			restart(timerConfig.getTimeWork());
+		}
+		const clickEditTimer = () => {
+
+		}
 	}
 	return (
-		<div className={"timer-interface__wrapper col-7"}>
+		<div className={`timer-interface__wrapper col-7 ${!task?.id ? "pe-none" : ""}`}>
 			<div
 				className={
 					`timer-interface__header 
@@ -44,15 +61,14 @@ export const TimerInterface: FC<TProps> = ({ task, setTaskStart, setTaskComplete
 				<div className={"timer-interface__header-task-name"}>{task?.title || "задач нет"}</div>
 				<div>Помидор {task?.pomodoroCount || '0'}</div>
 			</div>
-			{ task ?
-				<div className={"timer-interface__menu-wrapper"}>
+			<div className={"timer-interface__menu-wrapper"}>
 				<div className={"timer-interface__content"}>
 					<div className={"timer-interface__time-wrapper"}>
 						<div
 							className={
 								`timer-interface__time
 									${isRunning ? "play" : ""}
-									${!isRunning && task.isStart ? "pause" : ""}`
+									${!isRunning && task?.isStart ? "pause" : ""}`
 							}
 						>
 							{hours !== 0 ? hours : ""}{minutes}:{seconds === 0 ? "00" : seconds}
@@ -66,13 +82,13 @@ export const TimerInterface: FC<TProps> = ({ task, setTaskStart, setTaskComplete
 					</div>
 					<div className={"timer-interface__title-wrapper"}>
 						<div className={"timer-interface__task-count"}>
-							Задача {task.pomodoroCount}&nbsp;-&nbsp;
+							{task?.id ? `Задача ${task?.pomodoroCount} -` : "задач нет"}
 						</div>
-						<div className={"timer-interface__task-name"}>{task.title}</div>
+						<div className={"timer-interface__task-name"}>&nbsp;{task?.title}</div>
 					</div>
 					<div>
 						{
-							task.isStart ?
+							task?.isStart ?
 								<div className={"timer-interface__buttons-wrapper"}>
 									<BaseButton
 										onClick={isRunning ? pauseTimer : resume}
@@ -90,13 +106,14 @@ export const TimerInterface: FC<TProps> = ({ task, setTaskStart, setTaskComplete
 								:
 								<div className={"timer-interface__buttons-wrapper"}>
 									<BaseButton
+										isDisable={task?.id === undefined}
 										onClick={startTaskTimer}
 										className={"timer-interface__btn-play prime-play-btn"}
 									>
 										Старт
 									</BaseButton>
 									<BaseButton
-										isDisable={!isRunning && !task.isStart}
+										isDisable={!isRunning && !task?.isStart}
 										onClick={pause}
 										className={`timer-interface__btn-cancel prime-pause-btn`}
 									>
@@ -107,8 +124,6 @@ export const TimerInterface: FC<TProps> = ({ task, setTaskStart, setTaskComplete
 					</div>
 				</div>
 			</div>
-				: <h2 className={"d-flex justify-content-center align-items-center"}>Добавьте задачи</h2>
-			}
 		</div>
 	)
 }
