@@ -9,7 +9,7 @@ import {
 	decrementTaskAction,
 	editTitleTaskAction,
 	setTaskStartAction,
-	setTaskCompleteAction,
+	setTaskCompleteAction, setUpdateTimerAction,
 } from "@/store/taskReducer";
 import { confirmModal } from "@/components/modals/confirmModal/ConfirmModal";
 import { TimerInterface } from "@/components/timerInterface/TimerInterface";
@@ -17,7 +17,7 @@ import { TimerInterface } from "@/components/timerInterface/TimerInterface";
 export const MainPage = () => {
 	const dispatch = useDispatch();
 
-	const [timerConfig,tasks] = useSelector((state) => [state.timerConfig, state.tasks], shallowEqual);
+	const [timerDate,tasks, timerConfig] = useSelector((state) => [state.timerDate, state.tasks, state.timerConfig], shallowEqual);
 	const createTask = (payload: Task) => {
 		dispatch(createTaskAction(payload));
 	}
@@ -39,6 +39,9 @@ export const MainPage = () => {
 	const setTaskComplete = (payload: Task["id"]) => {
 		dispatch(setTaskCompleteAction(payload))
 	}
+	const updateTimer = (time: {minutes:number, seconds: number}) => {
+		dispatch(setUpdateTimerAction(time));
+	}
 	const unCompleteTasks = tasks.filter((task) => !task.done)
 	const currentTask: Task = unCompleteTasks.find((task) => task != task.done);
 
@@ -51,13 +54,14 @@ export const MainPage = () => {
 				incrementPomodoro={incrementPomodoro}
 				decrementPomodoro={decrementPomodoro}
 				editTitleTask={editTitleTask}
-				timerConfig={timerConfig}
 			/>
 			<TimerInterface
 				key={currentTask?.id || uuidv4()}
 				task={currentTask}
 				setTaskStart={setTaskStart}
 				setTaskComplete={setTaskComplete}
+				timerDate={timerDate}
+				updateTimer={updateTimer}
 				timerConfig={timerConfig}
 			/>
 		</div>

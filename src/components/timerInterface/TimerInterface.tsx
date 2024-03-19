@@ -2,14 +2,17 @@ import "./timerInterface.scss";
 import { CircleButton } from "@/components/uiux/buttons/circleButton/CircleButton";
 import { BaseButton } from "@/components/uiux/buttons/baseButton/BaseButton";
 import { useTimer } from 'react-timer-hook';
-import { FC } from "react";
-import { Task, TConfigPomodoro } from "@/store/taskReducer";
+import { FC, useEffect, useState } from "react";
+import {Task, timerConfigInstance, TimerConfig} from "@/store/taskReducer";
+import { TimerEdit } from "@/components/timerInterface/timerEdit/TimerEdit";
 
 type TProps = {
 	task: Task
 	setTaskStart: (id: Task["id"]) => void;
 	setTaskComplete: (id: Task["id"]) => void;
-	timerConfig: TConfigPomodoro;
+	timerDate: Date;
+	updateTimer: ({minutes,seconds}: {minutes: number,seconds: number}) => void;
+	timerConfig: TimerConfig
 }
 
 export const TimerInterface: FC<TProps> = (
@@ -17,17 +20,26 @@ export const TimerInterface: FC<TProps> = (
 		task,
 		setTaskStart,
 		setTaskComplete,
+		timerDate,
+		updateTimer,
 		timerConfig
 	}) => {
+	useEffect(() => {
+		if (timerDate) {
+			console.log(timerDate, 'useEffect')
+			setEditValueTime(concatForEditValue());
+			restart(timerDate, false);
+		}
+	}, [timerDate])
 	const { seconds, minutes, hours, start, resume, isRunning, pause, restart } = useTimer(
 		{
-			expiryTimestamp: timerConfig.getTimeWork(),
+			expiryTimestamp: timerDate,
 			autoStart: false,
 			onExpire: () => console.warn('onExpire called')
 		});
-	const clickAddTime = () => {
-		console.log("click add time")
-	}
+	const concatForEditValue = () => parseInt(timerConfig.minutes.toString() + timerConfig.seconds);
+	const [isEditTimer, setActiveEditTimer] = useState<boolean>(false);
+	const [editValueTime, setEditValueTime] = useState<number>(concatForEditValue());
 	const startTaskTimer = () => {
 		if ("id" in task) {
 			start();
@@ -41,13 +53,23 @@ export const TimerInterface: FC<TProps> = (
 	}
 	const clickTaskComplete = () => {
 		if ("id" in task) {
-			timerConfig.getTimeWork();
 			setTaskComplete(task.id);
-			restart(timerConfig.getTimeWork());
+			restart(timerConfigInstance.getTimeWork());
 		}
-		const clickEditTimer = () => {
-
-		}
+	}
+	const clickEditTimer = () => {
+		pauseTimer();
+		setActiveEditTimer(true);
+	}
+	const handleEditInput = (event) => {
+		const value = event.currentTarget.value;
+		setEditValueTime(value);
+		const [minutes, seconds] = value.split(':');
+		updateTimer({
+			minutes: parseInt(minutes, 10),
+			seconds: parseInt(seconds ? seconds : "00", 10)
+		});
+		setActiveEditTimer(false);
 	}
 	return (
 		<div className={`timer-interface__wrapper col-7 ${!task?.id ? "pe-none" : ""}`}>
@@ -64,17 +86,22 @@ export const TimerInterface: FC<TProps> = (
 			<div className={"timer-interface__menu-wrapper"}>
 				<div className={"timer-interface__content"}>
 					<div className={"timer-interface__time-wrapper"}>
-						<div
-							className={
-								`timer-interface__time
+						{ isEditTimer ?
+							<div className={"d-flex flex-column gap-2 timer-interface__time"}>
+								<TimerEdit time={editValueTime} handleInput={handleEditInput} />
+							</div> :
+							<div
+								className={
+									`timer-interface__time
 									${isRunning ? "play" : ""}
 									${!isRunning && task?.isStart ? "pause" : ""}`
-							}
-						>
-							{hours !== 0 ? hours : ""}{minutes}:{seconds === 0 ? "00" : seconds}
-						</div>
+								}
+							>
+								{hours !== 0 ? hours : ""}{minutes}:{seconds === 0 ? "00" : seconds}
+							</div>
+						}
 						<CircleButton
-							onCLick={clickAddTime}
+							onCLick={clickEditTimer}
 							className={"timer-interface__button-add-time"}
 						>
 							+

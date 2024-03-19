@@ -7,13 +7,15 @@ type TProps = {
 	children: unknown;
 }
 
-export const CircleButton: FC<TProps> = ({ onCLick, className = "", children}) => {
+export const CircleButton: FC<TProps> = ({ onCLick, className = "", children }) => {
 	return (
-		<button
-			onClick={onCLick}
-			className={`${styles.circle} ${className}`}
-		>
-			{children}
-		</button>
+		<>
+			<button
+				onClick={onCLick}
+				className={`${styles.circle} ${className}`}
+			>
+				{children}
+			</button>
+		</>
 	)
 }
