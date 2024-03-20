@@ -43,7 +43,6 @@ export const TaskManager: FC<TProps> = (
 	const clickButtonCreateTask = () => {
 		if (taskInputValue) {
 			const task: Task = {
-				isStart: false,
 				title: taskInputValue,
 				id: uuidv4(),
 				pomodoroCount: 4,

@@ -1,7 +1,6 @@
-import {addMinutes, addSeconds, setMinutes, setSeconds, toDate} from "date-fns";
+import { addMinutes, addSeconds } from "date-fns";
 
 export type Task = {
-	isStart: boolean,
 	timer: Date,
 	timerOnPause: number,
 	id: string;
@@ -13,37 +12,52 @@ export type Task = {
 	}
 }
 export type TConfigPomodoro = {
-	minutes: number;
-	seconds: number;
-	getTimeWork: (number?: number) => Date;
+	minutes: string;
+	seconds: string;
+	getTimeWork: (number?: string, seconds?: string) => Date;
 }
 export type TimerConfig = {
-	minutes: number;
-	seconds: number;
+	minutes: string;
+	seconds: string;
 }
-type DefaultState = {
-	timerConfig: TimerConfig;
-	timerDate: Date;
+export type DefaultState = {
+	timerState:{
+		timerDate: Date;
+		breakTimerDate: Date | null;
+		isBreak: boolean,
+		isStart: boolean,
+		timerConfig: TimerConfig;
+		breakTimerConfig: TimerConfig;
+	};
 	tasks: Task[];
 }
 
 export const timerConfigInstance: TConfigPomodoro = {
-	minutes: 25,
-	seconds: 0,
-	getTimeWork: function (timeWork = this.minutes) {
+	minutes: "25",
+	seconds: "00",
+	getTimeWork: function (minutes = this.minutes, seconds = this.seconds) {
 		const currentTime = new Date();
-		this.time = addMinutes(currentTime, timeWork);
-		return this.time
+		this.time = addMinutes(currentTime, +minutes);
+		this.time = addSeconds(this.time, +seconds);
+		return this.time;
 	}
 }
 const defaultState: DefaultState = {
-	timerConfig: {
-		minutes: 25,
-		seconds: 0,
-	},
-	timerDate: timerConfigInstance.getTimeWork(),
-	tasks: [{
+	timerState: {
+		timerDate: timerConfigInstance.getTimeWork(),
+		breakTimerDate: null,
+		isBreak: false,
 		isStart: false,
+		timerConfig: {
+			minutes: "25",
+			seconds: "00",
+		},
+		breakTimerConfig: {
+			minutes: "05",
+			seconds: "00",
+		},
+	},
+	tasks: [{
 		timer: timerConfigInstance.getTimeWork(),
 		timerOnPause: 0,
 		id: "1",
@@ -63,6 +77,7 @@ interface ITaskReducer {
 			| "SET_TASK_START"
 			| "SET_TASK_COMPLETE"
 			| "UPDATE_TIMER"
+			| "SET_BRAKE_TIMER"
 		;
 		payload: {id: Task["id"] , title: Task["title"]} | Task["id"] | {minutes: number, seconds: number} ;
 	}
@@ -75,9 +90,20 @@ const EDIT_TASK_TASK = "EDIT_TASK_TASK";
 const SET_TASK_START = "SET_TASK_START";
 const SET_TASK_COMPLETE = "SET_TASK_COMPLETE";
 const UPDATE_TIMER = "UPDATE_TIMER";
+const SET_BRAKE_TIMER = "SET_BRAKE_TIMER";
 
 export const taskReducer = (state = defaultState, action: ITaskReducer['action']) => {
 	switch (action.type) {
+		case SET_BRAKE_TIMER:
+			if ("minutes" in action.payload && "seconds" in action.payload) {
+				const timer = timerConfigInstance.getTimeWork(action.payload.minutes.toString(), action.payload.seconds.toString());
+				return {
+					...state,
+					breakTimerDate: timer
+				}
+			}
+			console.error("SET_BRAKE_TIMER reducer ERROR")
+			return;
 		case UPDATE_TIMER:
 			if ("minutes" in action.payload && "seconds" in action.payload) {
 				const currentTime = new Date();
@@ -88,6 +114,7 @@ export const taskReducer = (state = defaultState, action: ITaskReducer['action']
 					timerDate: timer,
 					timerConfig: { minutes: action.payload.minutes, seconds:  action.payload.seconds} };
 			}
+			console.error("UPDATE_TIMER reducer ERROR")
 			return;
 		case SET_TASK_COMPLETE :
 			return {...state, tasks: [...state.tasks.map((task) => {
@@ -97,12 +124,13 @@ export const taskReducer = (state = defaultState, action: ITaskReducer['action']
 				return task;
 				})]}
 		case SET_TASK_START :
-			return {...state, tasks: [...state.tasks.map((task) => {
-				if (task.id === action.payload) {
-					task.isStart = true;
+			return {
+				...state,
+				timerState: {
+					...state.timerState,
+					isStart: true
 				}
-				return task;
-				})]}
+			};
 		case EDIT_TASK_TASK:
 			return  {...state, tasks: [...state.tasks.map((task) => {
 				if ("id" in action.payload && task.id === action.payload.id) {
@@ -136,4 +164,5 @@ export const decrementTaskAction = (payload: Task["id"]) => ({type: DECREMENT_PO
 export const editTitleTaskAction = (payload:{id:Task["id"],title: Task["title"]}) => ({type: EDIT_TASK_TASK, payload});
 export const setTaskStartAction = (payload: Task["id"]) => ({type: SET_TASK_START, payload});
 export const setTaskCompleteAction = (payload: Task["id"]) => ({type: SET_TASK_COMPLETE, payload});
-export const setUpdateTimerAction = (payload:{minutes: number, seconds: number}) => ({type: UPDATE_TIMER, payload});
+export const setUpdateTimerAction = (payload:{minutes: string, seconds: string}) => ({type: UPDATE_TIMER, payload});
+export const setBreakTimerAction = (payload:{minutes: string, seconds: string}) => ({type: SET_BRAKE_TIMER, payload});

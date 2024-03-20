@@ -3,16 +3,17 @@ import { CircleButton } from "@/components/uiux/buttons/circleButton/CircleButto
 import { BaseButton } from "@/components/uiux/buttons/baseButton/BaseButton";
 import { useTimer } from 'react-timer-hook';
 import { FC, useEffect, useState } from "react";
-import {Task, timerConfigInstance, TimerConfig} from "@/store/taskReducer";
+import { Task, timerConfigInstance, TimerConfig, DefaultState} from "@/store/taskReducer";
 import { TimerEdit } from "@/components/timerInterface/timerEdit/TimerEdit";
+import { formatSeconds } from "@/utils/formatSeconds.ts";
 
 type TProps = {
 	task: Task
+	timerState: DefaultState["timerState"];
 	setTaskStart: (id: Task["id"]) => void;
 	setTaskComplete: (id: Task["id"]) => void;
-	timerDate: Date;
-	updateTimer: ({minutes,seconds}: {minutes: number,seconds: number}) => void;
-	timerConfig: TimerConfig
+	updateTimer: (time: {minutes: string, seconds: string}) => void;
+	setBreakTimer: (time: {minutes: string, seconds: string}) => void;
 }
 
 export const TimerInterface: FC<TProps> = (
@@ -20,24 +21,32 @@ export const TimerInterface: FC<TProps> = (
 		task,
 		setTaskStart,
 		setTaskComplete,
-		timerDate,
 		updateTimer,
-		timerConfig
+		setBreakTimer,
+		timerState
 	}) => {
 	useEffect(() => {
-		if (timerDate) {
-			console.log(timerDate, 'useEffect')
+		if (timerState.timerDate) {
 			setEditValueTime(concatForEditValue());
-			restart(timerDate, false);
+			restart(timerState.timerDate, false);
 		}
-	}, [timerDate])
+	}, [timerState.timerDate])
+	useEffect(() => {
+		if (timerState.breakTimerDate) {
+			restart(timerState.breakTimerDate, true);
+		}
+	}, [timerState.breakTimerDate])
 	const { seconds, minutes, hours, start, resume, isRunning, pause, restart } = useTimer(
 		{
-			expiryTimestamp: timerDate,
+			expiryTimestamp: timerState.timerDate,
 			autoStart: false,
-			onExpire: () => console.warn('onExpire called')
+			onExpire: () => timerExpire()
 		});
-	const concatForEditValue = () => parseInt(timerConfig.minutes.toString() + timerConfig.seconds);
+	console.log(timerState)
+	const concatForEditValue = () => {
+		console.log(timerState.timerConfig.minutes.toString(), timerState.timerConfig.seconds)
+		return parseInt(timerState.timerConfig.minutes.toString() + timerState.timerConfig.seconds)
+	};
 	const [isEditTimer, setActiveEditTimer] = useState<boolean>(false);
 	const [editValueTime, setEditValueTime] = useState<number>(concatForEditValue());
 	const startTaskTimer = () => {
@@ -65,19 +74,36 @@ export const TimerInterface: FC<TProps> = (
 		const value = event.currentTarget.value;
 		setEditValueTime(value);
 		const [minutes, seconds] = value.split(':');
+		const argSeconds = typeof seconds === "number" ? seconds : parseInt(seconds, 10);
 		updateTimer({
-			minutes: parseInt(minutes, 10),
-			seconds: parseInt(seconds ? seconds : "00", 10)
+			minutes: minutes,
+			seconds:  formatSeconds(argSeconds)
 		});
+		hideEdit();
+	}
+	const hideEdit = () => {
 		setActiveEditTimer(false);
+	}
+	const breakTimer = () => {
+		setBreakTimer({minutes: timerState.breakTimerConfig.minutes, seconds: timerState.breakTimerConfig.seconds});
+		if (timerState.breakTimerDate) {
+			restart(timerState.breakTimerDate, true);
+			console.log("break start");
+		}
+	}
+	const timerExpire = () => {
+		console.log("timer expire")
+		if (task && task.pomodoroCount !== 0) {
+			breakTimer();
+		}
 	}
 	return (
 		<div className={`timer-interface__wrapper col-7 ${!task?.id ? "pe-none" : ""}`}>
 			<div
 				className={
 					`timer-interface__header 
-						${isRunning && task?.isStart ? "start-theme" : ""} 
-						${!isRunning && task?.isStart ? "pause-theme" : ""}`
+						${isRunning && timerState?.isStart ? "start-theme" : ""} 
+						${!isRunning && timerState?.isStart ? "pause-theme" : ""}`
 				}
 			>
 				<div className={"timer-interface__header-task-name"}>{task?.title || "задач нет"}</div>
@@ -88,13 +114,13 @@ export const TimerInterface: FC<TProps> = (
 					<div className={"timer-interface__time-wrapper"}>
 						{ isEditTimer ?
 							<div className={"d-flex flex-column gap-2 timer-interface__time"}>
-								<TimerEdit time={editValueTime} handleInput={handleEditInput} />
+								<TimerEdit time={editValueTime} handleInput={handleEditInput} hideEdit={hideEdit} />
 							</div> :
 							<div
 								className={
 									`timer-interface__time
 									${isRunning ? "play" : ""}
-									${!isRunning && task?.isStart ? "pause" : ""}`
+									${!isRunning && timerState?.isStart ? "pause" : ""}`
 								}
 							>
 								{hours !== 0 ? hours : ""}{minutes}:{seconds === 0 ? "00" : seconds}
@@ -115,7 +141,7 @@ export const TimerInterface: FC<TProps> = (
 					</div>
 					<div>
 						{
-							task?.isStart ?
+							timerState?.isStart && task ?
 								<div className={"timer-interface__buttons-wrapper"}>
 									<BaseButton
 										onClick={isRunning ? pauseTimer : resume}
@@ -140,7 +166,7 @@ export const TimerInterface: FC<TProps> = (
 										Старт
 									</BaseButton>
 									<BaseButton
-										isDisable={!isRunning && !task?.isStart}
+										isDisable={!isRunning && !timerState?.isStart}
 										onClick={pause}
 										className={`timer-interface__btn-cancel prime-pause-btn`}
 									>
