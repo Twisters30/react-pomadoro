@@ -5,7 +5,6 @@ import { PatternFormat } from 'react-number-format';
 type TProps = {
 	time: number;
 	handleInput: (time: string) => void;
-	hideEdit: () => void;
 }
 
 export const TimerEdit:FC<TProps> = ({time, handleInput}) => {

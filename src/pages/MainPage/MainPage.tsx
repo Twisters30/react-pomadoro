@@ -10,8 +10,10 @@ import {
 	editTitleTaskAction,
 	setTaskStartAction,
 	setTaskCompleteAction,
-	setUpdateTimerAction,
-	setBreakTimerAction
+	setMainTimerAction,
+	setBreakTimerAction,
+	setBreakAction,
+	resetMainTimerAction
 } from "@/store/taskReducer";
 import { confirmModal } from "@/components/modals/confirmModal/ConfirmModal";
 import { TimerInterface } from "@/components/timerInterface/TimerInterface";
@@ -24,8 +26,8 @@ export const MainPage = () => {
 			state.timerState,
 			state.tasks,
 		], shallowEqual);
-	const createTask = (payload: Task) => {
-		dispatch(createTaskAction(payload));
+	const createTask = (title: Task["title"]) => {
+		dispatch(createTaskAction({title}));
 	}
 	const removeTask = async (payload: Task["id"]) => {
 		confirmModal(() => dispatch(removeTaskAction(payload)));
@@ -39,17 +41,23 @@ export const MainPage = () => {
 	const editTitleTask = (payload: {id: Task["id"], title: Task["title"]}) => {
 		dispatch(editTitleTaskAction(payload));
 	}
-	const setTaskStart = (payload: Task["id"]) => {
-		dispatch(setTaskStartAction(payload))
+	const setTaskStart = () => {
+		dispatch(setTaskStartAction())
+	}
+	const setBreakStart = (payload: boolean) => {
+		dispatch(setBreakAction(payload));
 	}
 	const setTaskComplete = (payload: Task["id"]) => {
 		dispatch(setTaskCompleteAction(payload))
 	}
-	const updateTimer = (time: {minutes: string, seconds: string}) => {
-		dispatch(setUpdateTimerAction(time));
+	const setMainTimer = (time: {minutes: string, seconds: string}) => {
+		dispatch(setMainTimerAction(time));
 	}
 	const setBreakTimer = (time: {minutes: string, seconds: string}) => {
 		dispatch(setBreakTimerAction(time));
+	}
+	const resetMainTimer = () => {
+		dispatch(resetMainTimerAction());
 	}
 	const unCompleteTasks = tasks.filter((task) => !task.done)
 	const currentTask: Task = unCompleteTasks.find((task) => task != task.done);
@@ -70,8 +78,11 @@ export const MainPage = () => {
 				setTaskStart={setTaskStart}
 				setTaskComplete={setTaskComplete}
 				timerState={timerState}
-				updateTimer={updateTimer}
+				setMainTimer={setMainTimer}
 				setBreakTimer={setBreakTimer}
+				setBreakStart={setBreakStart}
+				decrementPomodoro={decrementPomodoro}
+				resetMainTimer={resetMainTimer}
 			/>
 		</div>
 	)

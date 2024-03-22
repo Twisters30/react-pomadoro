@@ -3,17 +3,20 @@ import { CircleButton } from "@/components/uiux/buttons/circleButton/CircleButto
 import { BaseButton } from "@/components/uiux/buttons/baseButton/BaseButton";
 import { useTimer } from 'react-timer-hook';
 import { FC, useEffect, useState } from "react";
-import { Task, timerConfigInstance, TimerConfig, DefaultState} from "@/store/taskReducer";
+import { Task, DefaultState} from "@/store/taskReducer";
 import { TimerEdit } from "@/components/timerInterface/timerEdit/TimerEdit";
 import { formatSeconds } from "@/utils/formatSeconds.ts";
 
 type TProps = {
 	task: Task
 	timerState: DefaultState["timerState"];
-	setTaskStart: (id: Task["id"]) => void;
+	setTaskStart: () => void;
+	setBreakStart: (payload: boolean) => void;
 	setTaskComplete: (id: Task["id"]) => void;
-	updateTimer: (time: {minutes: string, seconds: string}) => void;
+	setMainTimer: (time: {minutes: string, seconds: string}) => void;
 	setBreakTimer: (time: {minutes: string, seconds: string}) => void;
+	decrementPomodoro: (id: Task["id"]) => void;
+	resetMainTimer: () => void;
 }
 
 export const TimerInterface: FC<TProps> = (
@@ -21,9 +24,12 @@ export const TimerInterface: FC<TProps> = (
 		task,
 		setTaskStart,
 		setTaskComplete,
-		updateTimer,
+		setMainTimer,
 		setBreakTimer,
-		timerState
+		timerState,
+		setBreakStart,
+		decrementPomodoro,
+		resetMainTimer
 	}) => {
 	useEffect(() => {
 		if (timerState.timerDate) {
@@ -33,7 +39,7 @@ export const TimerInterface: FC<TProps> = (
 	}, [timerState.timerDate])
 	useEffect(() => {
 		if (timerState.breakTimerDate) {
-			restart(timerState.breakTimerDate, true);
+			restart(timerState.breakTimerDate, false);
 		}
 	}, [timerState.breakTimerDate])
 	const { seconds, minutes, hours, start, resume, isRunning, pause, restart } = useTimer(
@@ -42,9 +48,7 @@ export const TimerInterface: FC<TProps> = (
 			autoStart: false,
 			onExpire: () => timerExpire()
 		});
-	console.log(timerState)
 	const concatForEditValue = () => {
-		console.log(timerState.timerConfig.minutes.toString(), timerState.timerConfig.seconds)
 		return parseInt(timerState.timerConfig.minutes.toString() + timerState.timerConfig.seconds)
 	};
 	const [isEditTimer, setActiveEditTimer] = useState<boolean>(false);
@@ -52,7 +56,7 @@ export const TimerInterface: FC<TProps> = (
 	const startTaskTimer = () => {
 		if ("id" in task) {
 			start();
-			setTaskStart(task.id);
+			setTaskStart();
 		}
 	}
 	const pauseTimer = () => {
@@ -63,8 +67,13 @@ export const TimerInterface: FC<TProps> = (
 	const clickTaskComplete = () => {
 		if ("id" in task) {
 			setTaskComplete(task.id);
-			restart(timerConfigInstance.getTimeWork());
+			resetTimer();
 		}
+	}
+	const resetTimer = () => {
+		hideEditTime();
+		setBreakStart(false);
+		resetMainTimer();
 	}
 	const clickEditTimer = () => {
 		pauseTimer();
@@ -75,27 +84,48 @@ export const TimerInterface: FC<TProps> = (
 		setEditValueTime(value);
 		const [minutes, seconds] = value.split(':');
 		const argSeconds = typeof seconds === "number" ? seconds : parseInt(seconds, 10);
-		updateTimer({
-			minutes: minutes,
-			seconds:  formatSeconds(argSeconds)
-		});
-		hideEdit();
+		if (timerState.isBreak) {
+			setBreakTimer(
+				{
+					minutes: minutes,
+					seconds: formatSeconds(argSeconds)
+				});
+		} else {
+			setMainTimer({
+				minutes: minutes,
+				seconds:  formatSeconds(argSeconds)
+			});
+		}
+		hideEditTime();
 	}
-	const hideEdit = () => {
+	const hideEditTime = () => {
 		setActiveEditTimer(false);
 	}
 	const breakTimer = () => {
-		setBreakTimer({minutes: timerState.breakTimerConfig.minutes, seconds: timerState.breakTimerConfig.seconds});
-		if (timerState.breakTimerDate) {
-			restart(timerState.breakTimerDate, true);
-			console.log("break start");
-		}
+		setBreakTimer(
+			{
+				minutes: timerState.breakTimerConfig.minutes,
+				seconds: timerState.breakTimerConfig.seconds
+			});
+		setBreakStart(true);
+		restart(timerState.breakTimerDate, true);
 	}
 	const timerExpire = () => {
-		console.log("timer expire")
-		if (task && task.pomodoroCount !== 0) {
-			breakTimer();
+		console.log("timer expire");
+		if (timerState.isBreak) {
+			skipBreak();
+		} else {
+			decrementPomodoro(task.id);
+			if (task && task.pomodoroCount > 0) {
+				breakTimer();
+			}
 		}
+	}
+	const skipBreak = () => {
+		setBreakStart(false);
+		setMainTimer(timerState.timerConfig);
+		restart(timerState.timerDate, true);
+		console.log("skip break");
 	}
 	return (
 		<div className={`timer-interface__wrapper col-7 ${!task?.id ? "pe-none" : ""}`}>
@@ -111,10 +141,11 @@ export const TimerInterface: FC<TProps> = (
 			</div>
 			<div className={"timer-interface__menu-wrapper"}>
 				<div className={"timer-interface__content"}>
+					{ timerState.isBreak && <h3 className={"text-center"}>Перерыв</h3>}
 					<div className={"timer-interface__time-wrapper"}>
 						{ isEditTimer ?
 							<div className={"d-flex flex-column gap-2 timer-interface__time"}>
-								<TimerEdit time={editValueTime} handleInput={handleEditInput} hideEdit={hideEdit} />
+								<TimerEdit time={editValueTime} handleInput={handleEditInput} />
 							</div> :
 							<div
 								className={
@@ -149,12 +180,21 @@ export const TimerInterface: FC<TProps> = (
 									>
 										{isRunning ? "Пауза" : "Продолжить"}
 									</BaseButton>
-									<BaseButton
-										onClick={clickTaskComplete}
-										className={"timer-interface__btn-cancel prime-pause-btn play"}
-									>
-										{isRunning ? "Стоп" : "Сделано"}
-									</BaseButton>
+									{ timerState.isBreak ?
+										<BaseButton
+											onClick={skipBreak}
+											className={"timer-interface__btn-cancel prime-pause-btn play"}
+										>
+											Пропустить
+										</BaseButton>
+										:
+										<BaseButton
+											onClick={clickTaskComplete}
+											className={"timer-interface__btn-cancel prime-pause-btn play"}
+										>
+											{isRunning ? "Стоп" : "Сделано"}
+										</BaseButton>
+									}
 								</div>
 								:
 								<div className={"timer-interface__buttons-wrapper"}>
