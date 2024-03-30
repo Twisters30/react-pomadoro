@@ -1,11 +1,12 @@
 import "./timerInterface.scss";
 import { CircleButton } from "@/components/uiux/buttons/circleButton/CircleButton";
-import { BaseButton } from "@/components/uiux/buttons/baseButton/BaseButton";
 import { useTimer } from 'react-timer-hook';
 import { FC, useEffect, useState } from "react";
 import { Task, DefaultState} from "@/store/taskReducer";
 import { TimerEdit } from "@/components/timerInterface/timerEdit/TimerEdit";
 import { formatSeconds } from "@/utils/formatSeconds.ts";
+import { StartTimerButtons } from "@/components/uiux/buttons/startTimerButtons/StartTimerButtons";
+import { IsRunTimerButtons } from "@/components/uiux/buttons/isRunTimerButtons/IsRunTimerButtons";
 
 type TProps = {
 	task: Task
@@ -166,7 +167,7 @@ export const TimerInterface: FC<TProps> = (
 					</div>
 					<div className={"timer-interface__title-wrapper"}>
 						<div className={"timer-interface__task-count"}>
-							{task?.id ? `Задача ${task?.pomodoroCount} -` : "задач нет"}
+							{task?.id ? `Задача ${task.queueNumber} -` : "задач нет"}
 						</div>
 						<div className={"timer-interface__task-name"}>&nbsp;{task?.title}</div>
 					</div>
@@ -174,44 +175,26 @@ export const TimerInterface: FC<TProps> = (
 						{
 							timerState?.isStart && task ?
 								<div className={"timer-interface__buttons-wrapper"}>
-									<BaseButton
-										onClick={isRunning ? pauseTimer : resume}
-										className={"timer-interface__btn-play prime-play-btn"}
-									>
-										{isRunning ? "Пауза" : "Продолжить"}
-									</BaseButton>
-									{ timerState.isBreak ?
-										<BaseButton
-											onClick={skipBreak}
-											className={"timer-interface__btn-cancel prime-pause-btn play"}
-										>
-											Пропустить
-										</BaseButton>
-										:
-										<BaseButton
-											onClick={clickTaskComplete}
-											className={"timer-interface__btn-cancel prime-pause-btn play"}
-										>
-											{isRunning ? "Стоп" : "Сделано"}
-										</BaseButton>
-									}
+									<IsRunTimerButtons
+										isRunning={isRunning}
+										resume={resume}
+										isBreak={timerState.isBreak}
+										classNameBtnStart={"timer-interface__btn-start"}
+										classNameBtnStop={"timer-interface__btn-stop"}
+										pauseTimer={pauseTimer}
+										clickTaskComplete={clickTaskComplete}
+										skipBreak={skipBreak}
+									/>
 								</div>
 								:
 								<div className={"timer-interface__buttons-wrapper"}>
-									<BaseButton
-										isDisable={task?.id === undefined}
-										onClick={startTaskTimer}
-										className={"timer-interface__btn-play prime-play-btn"}
-									>
-										Старт
-									</BaseButton>
-									<BaseButton
-										isDisable={!isRunning && !timerState?.isStart}
-										onClick={pause}
-										className={`timer-interface__btn-cancel prime-pause-btn`}
-									>
-										Стоп
-									</BaseButton>
+									<StartTimerButtons
+										startTaskTimer={startTaskTimer}
+										isDisableStartBtn={task?.id === undefined}
+										isDisableStopBtn={!isRunning && !timerState?.isStart}
+										classNameStartBtn={"timer-interface__btn-start"}
+										classNameStopBtn={"timer-interface__btn-stop"}
+									/>
 								</div>
 						}
 					</div>

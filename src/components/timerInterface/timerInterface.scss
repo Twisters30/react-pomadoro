@@ -39,7 +39,6 @@
       color: var(--pause-color);
     }
   }
-  &__btn-add-time {}
   &__task-count {
     color: #999999;
   }
@@ -52,10 +51,10 @@
     gap: 25px;
     margin-bottom: 107px;
   }
-  &__btn-play {
+  &__btn-start {
     color: #C4C4C4;
   }
-  &__btn-cancel {
+  &__btn-stop {
     color: #C4C4C4;
     background: transparent;
     &.play {

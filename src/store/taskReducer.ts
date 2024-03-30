@@ -2,6 +2,7 @@ import { addMinutes, addSeconds } from "date-fns";
 import { v4 as uuidv4 } from "uuid";
 
 export type Task = {
+	queueNumber: number;
 	timer: Date,
 	timerOnPause: number,
 	id: string;
@@ -62,6 +63,7 @@ const defaultState: DefaultState = {
 		},
 	},
 	tasks: [{
+		queueNumber: 1,
 		timer: timerConfigInstance.getTimeWork(),
 		timerOnPause: 0,
 		id: "1",
@@ -202,6 +204,7 @@ export const taskReducer = (state = defaultState, action: ITaskReducer['action']
 		case CREATE_TASK:
 			if ("title" in action.payload) {
 				const task: Task = {
+					queueNumber: 2,
 					title: action.payload.title,
 					id: uuidv4(),
 					pomodoroCount: 4,
@@ -209,15 +212,26 @@ export const taskReducer = (state = defaultState, action: ITaskReducer['action']
 					timerOnPause: 0,
 					done: false
 				};
-				return {...state, tasks: [...state.tasks, task]}
+				const updatedTasks = setTaskNumber([...state.tasks, task]);
+				return {...state, tasks: updatedTasks}
 			}
 			console.error("CREATE_TASK reducer ERROR")
 			return;
 		case REMOVE_TASK:
-			return {...state, tasks: [...state.tasks.filter((task) => task.id !== action.payload)]}
+			const updatedTasks = setTaskNumber([...state.tasks.filter((task) => task.id !== action.payload)]);
+			return {...state, tasks: updatedTasks}
 		default :
 			return state
 	}
+}
+
+const setTaskNumber = (tasks: Task[]): Task[] => {
+	return tasks.map((task, index) => {
+		return {
+			...task,
+			queueNumber: index + 1,
+		}
+	})
 }
 
 export const createTaskAction = (payload:{title: Task["title"]}) => ({type: CREATE_TASK, payload});
