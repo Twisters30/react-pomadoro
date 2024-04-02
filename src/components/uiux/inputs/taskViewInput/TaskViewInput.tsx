@@ -3,6 +3,9 @@ import { FC, FormEvent, ReactElement, useState, useRef } from "react";
 import { SettingsTodoDropdown } from "@/components/uiux/baseDropdown/SettingsTodoDropdown";
 import { useOnClickOutside } from "usehooks-ts";
 import { Task } from "@/store/taskReducer";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {useDndMonitor} from "@dnd-kit/core";
 
 type TProp = {
 	task: Task;
@@ -25,7 +28,8 @@ export const TaskViewInput: FC<TProp> = (
 	const [dropdownActive, setDropdownActive] = useState(false);
 	const refDropdown = useRef<HTMLUListElement | null>(null);
 	const refInputView = useRef(null);
-	const openDropdown = () => {
+	const openDropdown = (event) => {
+		event.stopPropagation();
 		setDropdownActive(true);
 	}
 	const closeDropdown = () => {
@@ -39,8 +43,10 @@ export const TaskViewInput: FC<TProp> = (
 		setValue(value);
 		handleInput(value, setValue);
 	}
+	const { setNodeRef, listeners, attributes, transition, transform} = useSortable({id:task.id})
+	const style = {transition, transform: CSS.Transform.toString(transform)};
 	return (
-		<li className={styles.wrapper}>
+		<li className={styles.wrapper} {...attributes} {...listeners} ref={setNodeRef} style={style}>
 			<div className={styles.icon}>{task.pomodoroCount}</div>
 			<input ref={refInputView!} onInput={handleInputValue} value={value} className={styles.input} type="text" />
 			<button onClick={openDropdown} className={styles.button}>...</button>

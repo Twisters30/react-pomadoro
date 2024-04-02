@@ -13,7 +13,7 @@ import {
 	setMainTimerAction,
 	setBreakTimerAction,
 	setBreakAction,
-	resetMainTimerAction
+	resetMainTimerAction, updateOrderTasksAction, handleDragEndAction
 } from "@/store/taskReducer";
 import { confirmModal } from "@/components/modals/confirmModal/ConfirmModal";
 import { TimerInterface } from "@/components/timerInterface/TimerInterface";
@@ -59,9 +59,11 @@ export const MainPage = () => {
 	const resetMainTimer = () => {
 		dispatch(resetMainTimerAction());
 	}
+	const handleDragEnd = (payload) => {
+		dispatch(handleDragEndAction(payload))
+	}
 	const unCompleteTasks = tasks.filter((task) => !task.done)
 	const currentTask: Task = unCompleteTasks.find((task) => task != task.done);
-
 	return (
 		<div className={"row"}>
 			<TaskManager
@@ -71,6 +73,7 @@ export const MainPage = () => {
 				incrementPomodoro={incrementPomodoro}
 				decrementPomodoro={decrementPomodoro}
 				editTitleTask={editTitleTask}
+				handleDragEnd={handleDragEnd}
 			/>
 			<TimerInterface
 				key={currentTask?.id || uuidv4()}

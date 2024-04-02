@@ -46,7 +46,9 @@
   font-size: 44px;
   color: #C4C4C4;
   line-height: 24px;
+  transition: 300ms;
   &:hover {
     box-shadow: #242424;
+    transform: scale(1.1);
   }
 }

@@ -1,5 +1,8 @@
 import { addMinutes, addSeconds } from "date-fns";
 import { v4 as uuidv4 } from "uuid";
+import {types} from "sass";
+import Error = types.Error;
+import {arrayMove} from "@dnd-kit/sortable";
 
 export type Task = {
 	queueNumber: number;
@@ -62,7 +65,8 @@ const defaultState: DefaultState = {
 			seconds: "00",
 		},
 	},
-	tasks: [{
+	tasks: [
+		{
 		queueNumber: 1,
 		timer: timerConfigInstance.getTimeWork(),
 		timerOnPause: 0,
@@ -70,7 +74,17 @@ const defaultState: DefaultState = {
 		title: "Сделать pomodoro трекер",
 		pomodoroCount: 4,
 		done: false
-	}]
+	},
+		{
+			queueNumber: 2,
+			timer: timerConfigInstance.getTimeWork(),
+			timerOnPause: 0,
+			id: "2",
+			title: "Сделать dnd sortable",
+			pomodoroCount: 4,
+			done: false
+		},
+	]
 }
 interface ITaskReducer {
 	state: Task[],
@@ -86,9 +100,12 @@ interface ITaskReducer {
 			| "SET_BRAKE_TIMER"
 			| "SET_BREAK"
 			| "RESET_MAIN_TIMER"
+			| "UPDATE_ORDER_TASKS"
+			| "HANDLE_DRAG_END"
 		;
 		payload:
 			{ id: Task["id"], title: Task["title"]}
+			| {tasks}
 			| { title: Task["title"] }
 			| Task["id"]
 			| {minutes: number, seconds: number};
@@ -105,9 +122,23 @@ const SET_MAIN_TIMER = "SET_MAIN_TIMER";
 const SET_BREAK_TIMER = "SET_BRAKE_TIMER";
 const SET_BREAK = "SET_BREAK";
 const RESET_MAIN_TIMER = "RESET_MAIN_TIMER";
+const HANDLE_DRAG_END = "HANDLE_DRAG_END";
 
 export const taskReducer = (state = defaultState, action: ITaskReducer['action']) => {
 	switch (action.type) {
+		case "HANDLE_DRAG_END":
+			console.log(action);
+			const { active, over } = action.payload;
+			if (active.id !== over.id) {
+				const oldIndex = state.tasks.findIndex(({ id }) => id === active.id);
+				const newIndex = state.tasks.findIndex(({ id }) => id === over.id);
+				const updatedTasksOrder = arrayMove([...state.tasks], oldIndex, newIndex);
+				return {
+					...state,
+					tasks: setTaskNumber(updatedTasksOrder)
+				}
+			}
+			return;
 		case RESET_MAIN_TIMER :
 			const timer = timerConfigInstance.getTimeWork(
 				state.timerState.timerConfig.minutes,
@@ -140,7 +171,10 @@ export const taskReducer = (state = defaultState, action: ITaskReducer['action']
 			return;
 		case SET_MAIN_TIMER:
 			if ("minutes" in action.payload && "seconds" in action.payload) {
-				const timer = timerConfigInstance.getTimeWork(action.payload.minutes.toString(), action.payload.seconds.toString());
+				const timer = timerConfigInstance.getTimeWork(
+					action.payload.minutes.toString(),
+					action.payload.seconds.toString()
+				);
 				return {
 					...state,
 					timerState: {
@@ -245,3 +279,4 @@ export const setTaskCompleteAction = (payload: Task["id"]) => ({type: SET_TASK_C
 export const setMainTimerAction = (payload:{minutes: string, seconds: string}) => ({type: SET_MAIN_TIMER, payload});
 export const setBreakTimerAction = (payload:{minutes: string, seconds: string}) => ({type: SET_BREAK_TIMER, payload});
 export const resetMainTimerAction = () => ({type: RESET_MAIN_TIMER});
+export const handleDragEndAction = (payload:{ active, over }) => ({type: HANDLE_DRAG_END, payload});
