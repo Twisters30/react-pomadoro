@@ -13,7 +13,8 @@ import {
 	setMainTimerAction,
 	setBreakTimerAction,
 	setBreakAction,
-	resetMainTimerAction, updateOrderTasksAction, handleDragEndAction
+	resetMainTimerAction,
+	handleDragEndAction
 } from "@/store/taskReducer";
 import { confirmModal } from "@/components/modals/confirmModal/ConfirmModal";
 import { TimerInterface } from "@/components/timerInterface/TimerInterface";

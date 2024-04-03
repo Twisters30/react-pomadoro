@@ -1,8 +1,6 @@
 import { addMinutes, addSeconds } from "date-fns";
 import { v4 as uuidv4 } from "uuid";
-import {types} from "sass";
-import Error = types.Error;
-import {arrayMove} from "@dnd-kit/sortable";
+import { arrayMove } from "@dnd-kit/sortable";
 
 export type Task = {
 	queueNumber: number;
@@ -33,8 +31,10 @@ export type DefaultState = {
 		breakTimerDate: Date | null;
 		isBreak: boolean,
 		isStart: boolean,
+		isLongBreak: boolean,
 		timerConfig: TimerConfig;
 		breakTimerConfig: TimerConfig;
+		longBreakTimerConfig: TimerConfig;
 	};
 	tasks: Task[];
 }
@@ -42,7 +42,7 @@ export type DefaultState = {
 export const timerConfigInstance: TConfigPomodoro = {
 	minutes: "25",
 	seconds: "00",
-	getTimeWork: function (minutes = this.minutes, seconds = this.seconds) {
+	getTimeWork: function (minutes: string = this.minutes, seconds: string = this.seconds) {
 		let currentTime = new Date();
 		currentTime = addMinutes(currentTime, +minutes);
 		currentTime = addSeconds(currentTime, +seconds);
@@ -52,16 +52,21 @@ export const timerConfigInstance: TConfigPomodoro = {
 const defaultState: DefaultState = {
 	appStatus: "init",
 	timerState: {
-		timerDate: timerConfigInstance.getTimeWork(),
+		timerDate: timerConfigInstance.getTimeWork("00","10"),
 		breakTimerDate: null,
 		isBreak: false,
 		isStart: false,
+		isLongBreak: false,
 		timerConfig: {
-			minutes: "25",
-			seconds: "00",
+			minutes: "00",
+			seconds: "10",
 		},
 		breakTimerConfig: {
-			minutes: "05",
+			minutes: "00",
+			seconds: "05",
+		},
+		longBreakTimerConfig: {
+			minutes: "40",
 			seconds: "00",
 		},
 	},
@@ -126,35 +131,38 @@ const HANDLE_DRAG_END = "HANDLE_DRAG_END";
 
 export const taskReducer = (state = defaultState, action: ITaskReducer['action']) => {
 	switch (action.type) {
-		case "HANDLE_DRAG_END":
-			console.log(action);
+		case HANDLE_DRAG_END:
 			const { active, over } = action.payload;
 			if (active.id !== over.id) {
 				const oldIndex = state.tasks.findIndex(({ id }) => id === active.id);
 				const newIndex = state.tasks.findIndex(({ id }) => id === over.id);
 				const updatedTasksOrder = arrayMove([...state.tasks], oldIndex, newIndex);
+				const timer = getResetMainTimer(state);
 				return {
 					...state,
+					timerState: {
+						...state.timerState,
+						timerDate: timer,
+					},
 					tasks: setTaskNumber(updatedTasksOrder)
 				}
 			}
 			return;
 		case RESET_MAIN_TIMER :
-			const timer = timerConfigInstance.getTimeWork(
-				state.timerState.timerConfig.minutes,
-				state.timerState.timerConfig.seconds
-			);
+			const timer = getResetMainTimer(state);
 			return {
 				...state,
 				timerState: {
 					...state.timerState,
 					timerDate: timer,
 				},
-
 			}
 		case SET_BREAK_TIMER:
 			if ("minutes" in action.payload && "seconds" in action.payload) {
-				const timer = timerConfigInstance.getTimeWork(action.payload.minutes.toString(), action.payload.seconds.toString());
+				const timer = timerConfigInstance.getTimeWork(
+					action.payload.minutes.toString(),
+					action.payload.seconds.toString()
+				);
 				return {
 					...state,
 					timerState: {
@@ -266,6 +274,12 @@ const setTaskNumber = (tasks: Task[]): Task[] => {
 			queueNumber: index + 1,
 		}
 	})
+}
+const getResetMainTimer = (state: DefaultState) => {
+	return timerConfigInstance.getTimeWork(
+		state.timerState.timerConfig.minutes,
+		state.timerState.timerConfig.seconds
+	);
 }
 
 export const createTaskAction = (payload:{title: Task["title"]}) => ({type: CREATE_TASK, payload});

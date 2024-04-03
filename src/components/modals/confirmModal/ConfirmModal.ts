@@ -2,14 +2,24 @@ import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import "./confirmModal.scss";
 
-export const confirmModal = (callback) => {
+type TOptionsModal = {
+	title?: string;
+	confirmButtonText?: string;
+	cancelButtonText?: string,
+	confirmButtonColor?: string,
+	cancelButtonColor?: string,
+}
+
+export const confirmModal = (
+	callback: () => void,
+	options?: TOptionsModal) => {
 	withReactContent(Swal).fire({
-		title: "Удалить задачу?",
+		title: options?.title || "Удалить задачу?",
 		showCancelButton: true,
-		confirmButtonColor: "#d33",
-		cancelButtonColor: "#aaa",
-		confirmButtonText: "Удалить",
-		cancelButtonText: "Отмена",
+		confirmButtonColor: options?.confirmButtonColor || "#d33",
+		cancelButtonColor: options?.cancelButtonColor || "#aaa",
+		confirmButtonText: options?.confirmButtonText || "Удалить",
+		cancelButtonText: options?.cancelButtonText || "Отмена",
 		showClass: {
 			popup: 'animated fadeInDown faster'
 		},

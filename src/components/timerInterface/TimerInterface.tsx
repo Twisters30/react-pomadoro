@@ -35,12 +35,12 @@ export const TimerInterface: FC<TProps> = (
 	useEffect(() => {
 		if (timerState.timerDate) {
 			setEditValueTime(concatForEditValue());
-			restart(timerState.timerDate, false);
+			restart(timerState.timerDate,  timerState.isStart);
 		}
 	}, [timerState.timerDate])
 	useEffect(() => {
 		if (timerState.breakTimerDate) {
-			restart(timerState.breakTimerDate, false);
+			restart(timerState.breakTimerDate, true);
 		}
 	}, [timerState.breakTimerDate])
 	const { seconds, minutes, hours, start, resume, isRunning, pause, restart } = useTimer(
@@ -102,7 +102,7 @@ export const TimerInterface: FC<TProps> = (
 	const hideEditTime = () => {
 		setActiveEditTimer(false);
 	}
-	const breakTimer = () => {
+	const startBreakTimer = () => {
 		setBreakTimer(
 			{
 				minutes: timerState.breakTimerConfig.minutes,
@@ -118,7 +118,9 @@ export const TimerInterface: FC<TProps> = (
 		} else {
 			decrementPomodoro(task.id);
 			if (task && task.pomodoroCount > 0) {
-				breakTimer();
+				startBreakTimer();
+			} else {
+				// TODO добавить функционал "длитеьный перерыв: startLongBreak"
 			}
 		}
 	}
@@ -155,7 +157,9 @@ export const TimerInterface: FC<TProps> = (
 									${!isRunning && timerState?.isStart ? "pause" : ""}`
 								}
 							>
-								{hours !== 0 ? hours : ""}{minutes}:{seconds === 0 ? "00" : seconds}
+								{hours !== 0 ? hours : ""}
+								{minutes.toString().length === 1 ? "0" + minutes : minutes}:
+								{seconds === 0 ? "00" : seconds.toString().length === 1 ? "0" + seconds : seconds}
 							</div>
 						}
 						<CircleButton
