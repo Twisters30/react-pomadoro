@@ -42,8 +42,8 @@ export const MainPage = () => {
 	const editTitleTask = (payload: {id: Task["id"], title: Task["title"]}) => {
 		dispatch(editTitleTaskAction(payload));
 	}
-	const setTaskStart = () => {
-		dispatch(setTaskStartAction())
+	const setTaskStart = (payload: boolean) => {
+		dispatch(setTaskStartAction(payload));
 	}
 	const setBreakStart = (payload: boolean) => {
 		dispatch(setBreakAction(payload));

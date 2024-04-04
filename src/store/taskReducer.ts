@@ -246,12 +246,12 @@ export const taskReducer = (state = defaultState, action: ITaskReducer['action']
 				}
 			};
 		}
-		case SET_TASK_START :
+		case SET_TASK_START:
 			return {
 				...state,
 				timerState: {
 					...state.timerState,
-					isStart: true
+					isStart: action.payload
 				}
 			};
 		case EDIT_TASK:
@@ -329,7 +329,7 @@ export const removeTaskAction = (payload: Task["id"]) => ({type: REMOVE_TASK, pa
 export const incrementTaskAction = (payload: Task["id"]) => ({type: INCREMENT_POMODORO_TASK, payload});
 export const decrementTaskAction = (payload: Task["id"]) => ({type: DECREMENT_POMODORO_TASK, payload});
 export const editTitleTaskAction = (payload:{id:Task["id"],title: Task["title"]}) => ({type: EDIT_TASK, payload});
-export const setTaskStartAction = () => ({type: SET_TASK_START});
+export const setTaskStartAction = (payload: boolean) => ({type: SET_TASK_START, payload});
 export const setBreakAction = (payload: boolean) => ({type: SET_BREAK, payload});
 export const setLongBreakAction = (payload: boolean) => ({type: SET_LONG_BREAK, payload});
 export const setTaskCompleteAction = (payload: Task["id"]) => ({type: SET_TASK_COMPLETE, payload});

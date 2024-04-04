@@ -13,7 +13,7 @@ import { confirmModal } from "@/components/modals/confirmModal/ConfirmModal";
 type TProps = {
 	task: Task
 	timerState: DefaultState["timerState"];
-	setTaskStart: () => void;
+	setTaskStart: (payload: boolean) => void;
 	setBreakStart: (payload: boolean) => void;
 	setLongBreakStart: (payload: boolean) => void;
 	setTaskComplete: (id: Task["id"]) => void;
@@ -41,11 +41,11 @@ export const TimerInterface: FC<TProps> = (
 	useEffect(() => {
 		if (timerState.timerDate) {
 			setEditValueTime(concatForEditValue());
-			restart(timerState.timerDate, timerState.isStart);
+			restart(timerState.timerDate, isRunning);
 		}
 	}, [timerState.timerDate])
 	useEffect(() => {
-		if (timerState.breakTimerDate) {
+		if (timerState.breakTimerDate && timerState.isBreak) {
 			restart(timerState.breakTimerDate, true);
 		}
 	}, [timerState.breakTimerDate])
@@ -68,23 +68,22 @@ export const TimerInterface: FC<TProps> = (
 	const startTaskTimer = () => {
 		if (task && "id" in task) {
 			start();
-			setTaskStart();
+			setTaskStart(true);
 		}
 	}
 	const pauseTimer = () => {
-		if ("id" in task) {
+		if (task && "id" in task) {
 			pause();
 		}
 	}
 	const clickTaskComplete = () => {
-		if ("id" in task) {
+		if (task && "id" in task) {
 			setTaskComplete(task.id);
 			resetTimer();
 		}
 	}
 	const resetTimer = () => {
 		hideEditTime();
-		setBreakStart(false);
 		resetMainTimer();
 	}
 	const clickEditTimer = () => {
@@ -170,14 +169,15 @@ export const TimerInterface: FC<TProps> = (
 			});
 	}
 	const doneBreak = () => {
+		setMainTimer(timerState.timerConfig);
 		if (timerState.isLongBreak) {
 			setLongBreakStart(false);
 			clickTaskComplete();
+			pauseTimer();
 			return;
 		}
-		setBreakStart(false);
-		setMainTimer(timerState.timerConfig);
 		restart(timerState.timerDate, true);
+		setBreakStart(false);
 		decrementPomodoro(task.id);
 		console.log("skip break");
 	}
