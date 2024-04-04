@@ -5,12 +5,21 @@ type TProps = {
 	className?: string;
 	onCLick: () => void;
 	children: unknown;
+	isDisabled?: boolean | undefined;
 }
 
-export const CircleButton: FC<TProps> = ({ onCLick, className = "", children }) => {
+export const CircleButton: FC<TProps> = (
+	{
+		onCLick,
+		className = "",
+		children,
+		isDisabled
+	}
+) => {
 	return (
 		<>
 			<button
+				disabled={isDisabled ? isDisabled : false}
 				onClick={onCLick}
 				className={`${styles.circle} ${className}`}
 			>

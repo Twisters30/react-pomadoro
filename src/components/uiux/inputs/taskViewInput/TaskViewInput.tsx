@@ -5,7 +5,6 @@ import { useOnClickOutside } from "usehooks-ts";
 import { Task } from "@/store/taskReducer";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import {useDndMonitor} from "@dnd-kit/core";
 
 type TProp = {
 	task: Task;

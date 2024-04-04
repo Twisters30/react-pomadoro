@@ -56,7 +56,9 @@ export const TaskManager: FC<TProps> = (
 		setTaskIdEditing(id);
 	}
 	return(
-		<div className={"d-flex flex-column col-5"}>
+		<form
+			onSubmit={(e) => e.preventDefault()}
+			className={"d-flex flex-column col-5"}>
 			<ManualDescription className="mb-25p" />
 			<TaskInput className="mb-25p" handleInput={handleTaskInputValue} inputValue={taskInputValue} />
 			<BaseButton
@@ -91,6 +93,6 @@ export const TaskManager: FC<TProps> = (
 					</SortableContext>
 				</DndContext>
 			</ul>
-		</div>
+		</form>
 	)
 }

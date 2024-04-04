@@ -14,7 +14,7 @@ import {
 	setBreakTimerAction,
 	setBreakAction,
 	resetMainTimerAction,
-	handleDragEndAction
+	handleDragEndAction, setLongBreakAction, setLongBreakTimerAction
 } from "@/store/taskReducer";
 import { confirmModal } from "@/components/modals/confirmModal/ConfirmModal";
 import { TimerInterface } from "@/components/timerInterface/TimerInterface";
@@ -48,6 +48,9 @@ export const MainPage = () => {
 	const setBreakStart = (payload: boolean) => {
 		dispatch(setBreakAction(payload));
 	}
+	const setLongBreakStart = (payload: boolean) => {
+		dispatch(setLongBreakAction(payload));
+	}
 	const setTaskComplete = (payload: Task["id"]) => {
 		dispatch(setTaskCompleteAction(payload))
 	}
@@ -56,6 +59,9 @@ export const MainPage = () => {
 	}
 	const setBreakTimer = (time: {minutes: string, seconds: string}) => {
 		dispatch(setBreakTimerAction(time));
+	}
+	const setLongBreakTimer = (time: {minutes: string, seconds: string}) => {
+		dispatch(setLongBreakTimerAction(time));
 	}
 	const resetMainTimer = () => {
 		dispatch(resetMainTimerAction());
@@ -84,6 +90,8 @@ export const MainPage = () => {
 				timerState={timerState}
 				setMainTimer={setMainTimer}
 				setBreakTimer={setBreakTimer}
+				setLongBreakTimer={setLongBreakTimer}
+				setLongBreakStart={setLongBreakStart}
 				setBreakStart={setBreakStart}
 				decrementPomodoro={decrementPomodoro}
 				resetMainTimer={resetMainTimer}

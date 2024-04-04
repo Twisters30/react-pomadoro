@@ -2,20 +2,24 @@ import "./timerInterface.scss";
 import { CircleButton } from "@/components/uiux/buttons/circleButton/CircleButton";
 import { useTimer } from 'react-timer-hook';
 import { FC, useEffect, useState } from "react";
-import { Task, DefaultState} from "@/store/taskReducer";
+import { Task, DefaultState } from "@/store/taskReducer";
 import { TimerEdit } from "@/components/timerInterface/timerEdit/TimerEdit";
 import { formatSeconds } from "@/utils/formatSeconds.ts";
 import { StartTimerButtons } from "@/components/uiux/buttons/startTimerButtons/StartTimerButtons";
 import { IsRunTimerButtons } from "@/components/uiux/buttons/isRunTimerButtons/IsRunTimerButtons";
+import { confirmModal } from "@/components/modals/confirmModal/ConfirmModal";
+
 
 type TProps = {
 	task: Task
 	timerState: DefaultState["timerState"];
 	setTaskStart: () => void;
 	setBreakStart: (payload: boolean) => void;
+	setLongBreakStart: (payload: boolean) => void;
 	setTaskComplete: (id: Task["id"]) => void;
 	setMainTimer: (time: {minutes: string, seconds: string}) => void;
 	setBreakTimer: (time: {minutes: string, seconds: string}) => void;
+	setLongBreakTimer: (time: {minutes: string, seconds: string}) => void;
 	decrementPomodoro: (id: Task["id"]) => void;
 	resetMainTimer: () => void;
 }
@@ -30,12 +34,14 @@ export const TimerInterface: FC<TProps> = (
 		timerState,
 		setBreakStart,
 		decrementPomodoro,
-		resetMainTimer
+		resetMainTimer,
+		setLongBreakStart,
+		setLongBreakTimer
 	}) => {
 	useEffect(() => {
 		if (timerState.timerDate) {
 			setEditValueTime(concatForEditValue());
-			restart(timerState.timerDate,  timerState.isStart);
+			restart(timerState.timerDate, timerState.isStart);
 		}
 	}, [timerState.timerDate])
 	useEffect(() => {
@@ -43,6 +49,11 @@ export const TimerInterface: FC<TProps> = (
 			restart(timerState.breakTimerDate, true);
 		}
 	}, [timerState.breakTimerDate])
+	useEffect(() => {
+		if (timerState.longBreakTimerDate && timerState.isLongBreak) {
+			restart(timerState.longBreakTimerDate, true);
+		}
+	}, [timerState.longBreakTimerDate])
 	const { seconds, minutes, hours, start, resume, isRunning, pause, restart } = useTimer(
 		{
 			expiryTimestamp: timerState.timerDate,
@@ -55,7 +66,7 @@ export const TimerInterface: FC<TProps> = (
 	const [isEditTimer, setActiveEditTimer] = useState<boolean>(false);
 	const [editValueTime, setEditValueTime] = useState<number>(concatForEditValue());
 	const startTaskTimer = () => {
-		if ("id" in task) {
+		if (task && "id" in task) {
 			start();
 			setTaskStart();
 		}
@@ -85,24 +96,33 @@ export const TimerInterface: FC<TProps> = (
 		setEditValueTime(value);
 		const [minutes, seconds] = value.split(':');
 		const argSeconds = typeof seconds === "number" ? seconds : parseInt(seconds, 10);
-		if (timerState.isBreak) {
-			setBreakTimer(
-				{
+		switch (true) {
+			case timerState.isBreak:
+				setBreakTimer(
+					{
+						minutes: minutes,
+						seconds: formatSeconds(argSeconds)
+					});
+				break;
+			case timerState.isLongBreak:
+				setLongBreakTimer({
+					minutes: minutes,
+					seconds: formatSeconds(argSeconds)
+				})
+				break;
+			default:
+				setMainTimer({
 					minutes: minutes,
 					seconds: formatSeconds(argSeconds)
 				});
-		} else {
-			setMainTimer({
-				minutes: minutes,
-				seconds:  formatSeconds(argSeconds)
-			});
+				break
 		}
 		hideEditTime();
 	}
 	const hideEditTime = () => {
 		setActiveEditTimer(false);
 	}
-	const startBreakTimer = () => {
+	const startBreak = () => {
 		setBreakTimer(
 			{
 				minutes: timerState.breakTimerConfig.minutes,
@@ -112,22 +132,53 @@ export const TimerInterface: FC<TProps> = (
 		restart(timerState.breakTimerDate, true);
 	}
 	const timerExpire = () => {
+		if (!task) return;
 		console.log("timer expire");
-		if (timerState.isBreak) {
-			skipBreak();
-		} else {
-			decrementPomodoro(task.id);
-			if (task && task.pomodoroCount > 0) {
-				startBreakTimer();
-			} else {
-				// TODO добавить функционал "длитеьный перерыв: startLongBreak"
-			}
+		switch (true) {
+			case timerState.isLongBreak:
+				doneBreak();
+				confirmModal(() => {
+					clickTaskComplete();
+				}, {
+					title: "Помидорки закончились, вы хотите завершить задачу?",
+					confirmButtonText: "Да",
+					cancelButtonText: "Нет",
+					confirmButtonColor: "#A8B64F",
+				})
+				break;
+			case timerState.isBreak:
+				doneBreak();
 		}
+		if (task && task.pomodoroCount !== 1 && !timerState.isBreak) {
+			startBreak();
+			return;
+		}
+		if (task && task.pomodoroCount === 1 && !timerState.isLongBreak) {
+			console.log('start-long-brake')
+			doneBreak();
+			startLongBreak();
+			return;
+		}
+		startTaskTimer();
 	}
-	const skipBreak = () => {
+	const startLongBreak = () => {
+		setLongBreakStart(true);
+		setLongBreakTimer(
+			{
+				minutes: timerState.longBreakTimerConfig.minutes,
+				seconds: timerState.longBreakTimerConfig.seconds
+			});
+	}
+	const doneBreak = () => {
+		if (timerState.isLongBreak) {
+			setLongBreakStart(false);
+			clickTaskComplete();
+			return;
+		}
 		setBreakStart(false);
 		setMainTimer(timerState.timerConfig);
 		restart(timerState.timerDate, true);
+		decrementPomodoro(task.id);
 		console.log("skip break");
 	}
 	return (
@@ -145,6 +196,7 @@ export const TimerInterface: FC<TProps> = (
 			<div className={"timer-interface__menu-wrapper"}>
 				<div className={"timer-interface__content"}>
 					{ timerState.isBreak && <h3 className={"text-center"}>Перерыв</h3>}
+					{ timerState.isLongBreak && <h3 className={"text-center"}>Длительный перерыв</h3>}
 					<div className={"timer-interface__time-wrapper"}>
 						{ isEditTimer ?
 							<div className={"d-flex flex-column gap-2 timer-interface__time"}>
@@ -163,6 +215,7 @@ export const TimerInterface: FC<TProps> = (
 							</div>
 						}
 						<CircleButton
+							isDisabled={isRunning}
 							onCLick={clickEditTimer}
 							className={"timer-interface__button-add-time"}
 						>
@@ -182,12 +235,12 @@ export const TimerInterface: FC<TProps> = (
 									<IsRunTimerButtons
 										isRunning={isRunning}
 										resume={resume}
-										isBreak={timerState.isBreak}
+										isBreak={timerState.isBreak || timerState.isLongBreak}
 										classNameBtnStart={"timer-interface__btn-start"}
 										classNameBtnStop={"timer-interface__btn-stop"}
 										pauseTimer={pauseTimer}
 										clickTaskComplete={clickTaskComplete}
-										skipBreak={skipBreak}
+										skipBreak={doneBreak}
 									/>
 								</div>
 								:
