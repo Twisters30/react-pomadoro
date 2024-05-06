@@ -13,7 +13,7 @@ type TProp = {
 	task: Task;
 	incrementPomodoro: (id: Task["id"]) => void;
 	decrementPomodoro: (id: Task["id"]) => void;
-	editTitleTaskActive: (id: Task["id"], ref: RefObject<HTMLInputElement>) => void;
+	editTitleTaskActive: (id: Task["id"], ref: RefObject<HTMLInputElement>  | null) => void;
 	refInputView: RefObject<HTMLInputElement> | null;
 }
 type TDropdown = {

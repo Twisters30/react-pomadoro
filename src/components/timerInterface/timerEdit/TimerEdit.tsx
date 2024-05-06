@@ -4,15 +4,17 @@ import { PatternFormat } from 'react-number-format';
 
 type TProps = {
 	time: number;
-	handleInput: (time: string) => void;
+	handleInput: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const TimerEdit:FC<TProps> = ({time, handleInput}) => {
 
-	const ref = useRef(null);
+	const ref: React.RefObject<HTMLInputElement> = useRef(null);
 
 	useEffect(() => {
-		ref.current.focus();
+		if (ref.current) {
+			ref.current.focus();
+		}
 	}, [])
 	return (
 		<div>

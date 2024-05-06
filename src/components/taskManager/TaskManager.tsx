@@ -4,7 +4,7 @@ import { BaseButton } from "@/components/uiux/buttons/baseButton/BaseButton";
 import { TaskViewInput } from "@/components/uiux/inputs/taskViewInput/TaskViewInput";
 import { Task } from "@/store/taskReducer";
 import { Dispatch, FC, FormEvent, useState } from "react";
-import { closestCenter, DndContext } from "@dnd-kit/core";
+import { closestCenter, DndContext, DragOverEvent } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useDndKitConfig } from "@/hooks/dndKit";
 
@@ -15,7 +15,7 @@ type TProps = {
 	incrementPomodoro: (id: Task["id"]) => void;
 	decrementPomodoro: (id: Task["id"]) => void;
 	editTitleTask: (id:{id:Task["id"], title: Task["title"]}) => void;
-	handleDragEnd: ({active, over}) => void;
+	handleDragEnd: (event: DragOverEvent) => void;
 }
 
 export const TaskManager: FC<TProps> = (
@@ -50,11 +50,17 @@ export const TaskManager: FC<TProps> = (
 			setTaskInputValue("");
 		}
 	}
-	const editTitleTaskActive = function (id: Task["id"], refInput) {
-		refInput.current.focus();
+	const editTitleTaskActive = function (this: () => void, id: Task["id"], refInput: React.RefObject<HTMLInputElement> | null) {
+		if (refInput && refInput.current) {
+			refInput.current.focus();
+		}
 		if (typeof this === "function") this();
 		setTaskIdEditing(id);
 	}
+	// const { setNodeRef } = useDraggable({
+	// 	id: "draggable",
+	// 	disabled: true
+	// })
 	return(
 		<form
 			onSubmit={(e) => e.preventDefault()}
@@ -72,7 +78,9 @@ export const TaskManager: FC<TProps> = (
 				<DndContext
 					sensors={sensors}
 					collisionDetection={closestCenter}
-					onDragEnd={handleDragEnd}>
+					onDragEnd={handleDragEnd}
+					id={'draggable'}
+				>
 					<SortableContext
 						items={tasks.map((item) => item.id)}
 						strategy={verticalListSortingStrategy}>

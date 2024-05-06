@@ -1,5 +1,5 @@
 import styles from "./taskViewInput.module.scss";
-import { FC, FormEvent, ReactElement, useState, useRef } from "react";
+import {FC, FormEvent, ReactElement, useState, useRef, Dispatch} from "react";
 import { SettingsTodoDropdown } from "@/components/uiux/baseDropdown/SettingsTodoDropdown";
 import { useOnClickOutside } from "usehooks-ts";
 import { Task } from "@/store/taskReducer";
@@ -8,11 +8,11 @@ import { CSS } from "@dnd-kit/utilities";
 
 type TProp = {
 	task: Task;
-	handleInput: (value: string, setInputView) => void;
+	handleInput: (value: string, setInputView: Dispatch<Task["title"]>) => void;
 	removeTask: (id: Task["id"]) => void;
 	incrementPomodoro: (id: Task["id"]) => void;
 	decrementPomodoro: (id: Task["id"]) => void;
-	editTitleTaskActive: (id: Task["id"], ref) => void;
+	editTitleTaskActive: (id: Task["id"], ref: React.RefObject<HTMLInputElement> | null) => void;
 }
 
 export const TaskViewInput: FC<TProp> = (
@@ -27,7 +27,7 @@ export const TaskViewInput: FC<TProp> = (
 	const [dropdownActive, setDropdownActive] = useState(false);
 	const refDropdown = useRef<HTMLUListElement | null>(null);
 	const refInputView = useRef(null);
-	const openDropdown = (event) => {
+	const openDropdown = (event: React.MouseEvent<HTMLButtonElement>) => {
 		event.stopPropagation();
 		setDropdownActive(true);
 	}

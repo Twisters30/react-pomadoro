@@ -1,6 +1,12 @@
 import { addMinutes, addSeconds } from "date-fns";
 import { v4 as uuidv4 } from "uuid";
 import { arrayMove } from "@dnd-kit/sortable";
+import {
+	guardCreateTaskPayload, guardDragEndEventPayload,
+	guardTaskPayload,
+	guardTimerPayload
+} from "@/utils/checkReducerPayload.ts";
+import {DragOverEvent} from "@dnd-kit/core";
 
 export type Task = {
 	queueNumber: number;
@@ -30,9 +36,10 @@ export type DefaultState = {
 		timerDate: Date;
 		breakTimerDate: Date | null;
 		longBreakTimerDate: Date | null;
-		isBreak: boolean,
-		isStart: boolean,
-		isLongBreak: boolean,
+		isBreak: boolean;
+		isStart: boolean;
+		isLongBreak: boolean;
+		currentActiveTimer: TimerConfig | null;
 		timerConfig: TimerConfig;
 		breakTimerConfig: TimerConfig;
 		longBreakTimerConfig: TimerConfig;
@@ -43,7 +50,7 @@ export type DefaultState = {
 export const timerConfigInstance: TConfigPomodoro = {
 	minutes: "25",
 	seconds: "00",
-	getTimeWork: function (minutes: string = this.minutes, seconds: string = this.seconds) {
+	getTimeWork: function (this:TimerConfig, minutes: string = this.minutes, seconds: string = this.seconds) {
 		let currentTime = new Date();
 		currentTime = addMinutes(currentTime, +minutes);
 		currentTime = addSeconds(currentTime, +seconds);
@@ -59,6 +66,7 @@ const defaultState: DefaultState = {
 		isBreak: false,
 		isStart: false,
 		isLongBreak: false,
+		currentActiveTimer: null,
 		timerConfig: {
 			minutes: "25",
 			seconds: "00",
@@ -93,7 +101,7 @@ const defaultState: DefaultState = {
 		},
 	]
 }
-interface ITaskReducer {
+export interface ITaskReducer {
 	state: Task[],
 	action: {
 		type: "CREATE_TASK"
@@ -114,10 +122,12 @@ interface ITaskReducer {
 		;
 		payload:
 			{ id: Task["id"], title: Task["title"]}
-			| {tasks}
+			| { tasks: Task[] }
 			| { title: Task["title"] }
 			| Task["id"]
-			| {minutes: number, seconds: number};
+			| {minutes: number, seconds: number}
+			| DragOverEvent
+		;
 	}
 }
 const CREATE_TASK = "CREATE_TASK";
@@ -137,9 +147,10 @@ const HANDLE_DRAG_END = "HANDLE_DRAG_END";
 
 export const taskReducer = (state = defaultState, action: ITaskReducer['action']) => {
 	switch (action.type) {
-		case HANDLE_DRAG_END:
+		case HANDLE_DRAG_END: {
+			if (!guardDragEndEventPayload(action.payload)) return
 			const { active, over } = action.payload;
-			if (active.id !== over.id) {
+			if (over && active.id !== over.id) {
 				const oldIndex = state.tasks.findIndex(({ id }) => id === active.id);
 				const newIndex = state.tasks.findIndex(({ id }) => id === over.id);
 				const updatedTasksOrder = arrayMove([...state.tasks], oldIndex, newIndex);
@@ -150,13 +161,14 @@ export const taskReducer = (state = defaultState, action: ITaskReducer['action']
 				}
 			}
 			return;
+		}
 		case RESET_MAIN_TIMER :
 			return {
 				...state,
 				timerState: getResetMainTimer(state),
 			}
 		case SET_BREAK_TIMER:
-			if ("minutes" in action.payload && "seconds" in action.payload) {
+			if (guardTimerPayload(action.payload)) {
 				const timer = timerConfigInstance.getTimeWork(
 					action.payload.minutes.toString(),
 					action.payload.seconds.toString()
@@ -176,7 +188,7 @@ export const taskReducer = (state = defaultState, action: ITaskReducer['action']
 			console.error("SET_BRAKE_TIMER reducer ERROR")
 			return;
 		case SET_LONG_BREAK_TIMER:
-			if ("minutes" in action.payload && "seconds" in action.payload) {
+			if (guardTimerPayload(action.payload)) {
 				const timer = timerConfigInstance.getTimeWork(
 					action.payload.minutes.toString(),
 					action.payload.seconds.toString()
@@ -196,7 +208,8 @@ export const taskReducer = (state = defaultState, action: ITaskReducer['action']
 			console.error("SET_BRAKE_TIMER reducer ERROR")
 			return;
 		case SET_MAIN_TIMER:
-			if ("minutes" in action.payload && "seconds" in action.payload) {
+			if (guardTimerPayload(action.payload)) {
+				console.log(action)
 				const timer = timerConfigInstance.getTimeWork(
 					action.payload.minutes.toString(),
 					action.payload.seconds.toString()
@@ -256,7 +269,8 @@ export const taskReducer = (state = defaultState, action: ITaskReducer['action']
 			};
 		case EDIT_TASK:
 			return  {...state, tasks: [...state.tasks.map((task) => {
-				if ("id" in action.payload && task.id === action.payload.id) {
+				if (guardTaskPayload(action.payload) && task.id === action.payload.id) {
+					console.log(action.payload)
 					task.title = action.payload.title;
 				}
 				return task;
@@ -273,8 +287,10 @@ export const taskReducer = (state = defaultState, action: ITaskReducer['action']
 					}
 					return task;
 				})]}
+		// TODO ПОЧИНИТЬ ПРИХОДИТ ТОЛЬКО TITLE
 		case CREATE_TASK:
-			if ("title" in action.payload) {
+			console.log(action.payload)
+			if (guardCreateTaskPayload(action.payload)) {
 				const task: Task = {
 					queueNumber: 2,
 					title: action.payload.title,
@@ -293,13 +309,14 @@ export const taskReducer = (state = defaultState, action: ITaskReducer['action']
 			}
 			console.error("CREATE_TASK reducer ERROR")
 			return;
-		case REMOVE_TASK:
+		case REMOVE_TASK: {
 			const updatedTasks = setTaskNumber([...state.tasks.filter((task) => task.id !== action.payload)]);
 			return {
 				...state,
 				tasks: updatedTasks,
 				timerState: getResetMainTimer(state),
 			}
+		}
 		default :
 			return state
 	}
@@ -333,8 +350,8 @@ export const setTaskStartAction = (payload: boolean) => ({type: SET_TASK_START, 
 export const setBreakAction = (payload: boolean) => ({type: SET_BREAK, payload});
 export const setLongBreakAction = (payload: boolean) => ({type: SET_LONG_BREAK, payload});
 export const setTaskCompleteAction = (payload: Task["id"]) => ({type: SET_TASK_COMPLETE, payload});
-export const setMainTimerAction = (payload:{minutes: string, seconds: string}) => ({type: SET_MAIN_TIMER, payload});
-export const setBreakTimerAction = (payload:{minutes: string, seconds: string}) => ({type: SET_BREAK_TIMER, payload});
-export const setLongBreakTimerAction = (payload:{minutes: string, seconds: string}) => ({type: SET_LONG_BREAK_TIMER, payload});
+export const setMainTimerAction = (payload: TimerConfig) => ({type: SET_MAIN_TIMER, payload});
+export const setBreakTimerAction = (payload:TimerConfig) => ({type: SET_BREAK_TIMER, payload});
+export const setLongBreakTimerAction = (payload:TimerConfig) => ({type: SET_LONG_BREAK_TIMER, payload});
 export const resetMainTimerAction = () => ({type: RESET_MAIN_TIMER});
-export const handleDragEndAction = (payload:{ active, over }) => ({type: HANDLE_DRAG_END, payload});
+export const handleDragEndAction = (payload: DragOverEvent) => ({type: HANDLE_DRAG_END, payload});

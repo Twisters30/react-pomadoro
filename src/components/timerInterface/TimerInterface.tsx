@@ -11,7 +11,7 @@ import { confirmModal } from "@/components/modals/confirmModal/ConfirmModal";
 
 
 type TProps = {
-	task: Task
+	task: Task | undefined
 	timerState: DefaultState["timerState"];
 	setTaskStart: (payload: boolean) => void;
 	setBreakStart: (payload: boolean) => void;
@@ -90,11 +90,11 @@ export const TimerInterface: FC<TProps> = (
 		pauseTimer();
 		setActiveEditTimer(true);
 	}
-	const handleEditInput = (event) => {
+	const handleEditInput = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const value = event.currentTarget.value;
-		setEditValueTime(value);
+		setEditValueTime(+value);
 		const [minutes, seconds] = value.split(':');
-		const argSeconds = typeof seconds === "number" ? seconds : parseInt(seconds, 10);
+		const argSeconds = parseInt(seconds, 10);
 		switch (true) {
 			case timerState.isBreak:
 				setBreakTimer(
@@ -128,7 +128,11 @@ export const TimerInterface: FC<TProps> = (
 				seconds: timerState.breakTimerConfig.seconds
 			});
 		setBreakStart(true);
-		restart(timerState.breakTimerDate, true);
+		if (timerState.breakTimerDate) {
+			restart(timerState.breakTimerDate, true);
+		} else {
+			throw new Error(`timerState.breakTimerDate is ${timerState.breakTimerDate}`)
+		}
 	}
 	const timerExpire = () => {
 		if (!task) return;
@@ -178,8 +182,12 @@ export const TimerInterface: FC<TProps> = (
 		}
 		restart(timerState.timerDate, true);
 		setBreakStart(false);
-		decrementPomodoro(task.id);
-		console.log("skip break");
+		if (task) {
+			decrementPomodoro(task.id);
+		} else {
+			throw new Error(`task is ${task}`);
+		}
+		console.log("call method doneBreak");
 	}
 	return (
 		<div className={`timer-interface__wrapper col-7 ${!task?.id ? "pe-none" : ""}`}>

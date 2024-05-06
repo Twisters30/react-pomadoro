@@ -14,19 +14,24 @@ import {
 	setBreakTimerAction,
 	setBreakAction,
 	resetMainTimerAction,
-	handleDragEndAction, setLongBreakAction, setLongBreakTimerAction
+	handleDragEndAction,
+	setLongBreakAction,
+	setLongBreakTimerAction,
+	DefaultState,
 } from "@/store/taskReducer";
 import { confirmModal } from "@/components/modals/confirmModal/ConfirmModal";
 import { TimerInterface } from "@/components/timerInterface/TimerInterface";
+import {DragOverEvent} from "@dnd-kit/core";
 
 export const MainPage = () => {
 	const dispatch = useDispatch();
 
-	const [timerState,tasks] = useSelector(
-		(state) => [
+	const [timerState, tasks]: [DefaultState["timerState"], DefaultState["tasks"]] = useSelector(
+		(state: DefaultState) => [
 			state.timerState,
 			state.tasks,
-		], shallowEqual);
+		],
+		shallowEqual);
 	const createTask = (title: Task["title"]) => {
 		dispatch(createTaskAction({title}));
 	}
@@ -66,11 +71,11 @@ export const MainPage = () => {
 	const resetMainTimer = () => {
 		dispatch(resetMainTimerAction());
 	}
-	const handleDragEnd = (payload) => {
+	const handleDragEnd = (payload: DragOverEvent) => {
 		dispatch(handleDragEndAction(payload))
 	}
 	const unCompleteTasks = tasks.filter((task) => !task.done)
-	const currentTask: Task = unCompleteTasks.find((task) => task != task.done);
+	const currentTask: Task | undefined = unCompleteTasks.length ? unCompleteTasks.find((task) => !task.done) : undefined;
 	return (
 		<div className={"row"}>
 			<TaskManager
